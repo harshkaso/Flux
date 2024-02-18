@@ -20,9 +20,14 @@ dpg.setup_dearpygui()
 z = 0
 inc = 0.001
 
+flowfield = []
+flowfield_z = -1
+
 def recalc_particles():
-    global z, inc
-    flowfield = _flowfield((_rows, _cols), z)
+    global z, inc, flowfield, flowfield_z
+    if z - flowfield_z >= 0.01:
+        flowfield = _flowfield((_rows, _cols), z)
+        flowfield_z = z
     for particle in particles:
         x = (particle.pos[0] // _scale) % _cols
         y = particle.pos[1] // _scale

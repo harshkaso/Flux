@@ -26,11 +26,11 @@ class Particle:
         self.acc = [self.acc[0] + force[0], self.acc[1] + force[1]]
     
     def warp_around_edges(self, width, height):
-        if self.pos[0] > width-1: self.pos[0] = 0 
-        if self.pos[0] < 0: self.pos[0] = width-1
+        if self.pos[0] >= width or self.pos[0] < 0:
+            self.pos[0] = (self.pos[0] + width) % width
 
-        if self.pos[1] > height-1: self.pos[1] = 0 
-        if self.pos[1] < 0: self.pos[1] = height-1
+        if self.pos[1] >= height or self.pos[1] < 0:
+            self.pos[1] = (self.pos[1] + height) % height
 
 
     def follow(self, force):
