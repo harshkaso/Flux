@@ -16,7 +16,10 @@ class Particle:
         self.pos += self.vel
         self.acc = np.array([0.0,0.0])
         # self.p = dpg.draw_circle(center=self.pos, radius=3, fill=[255,255,255,50], color=[255,255,255,50], parent=self.parent)
-        self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=[255,255,255,255], parent=self.parent)
+        if self.p:
+            dpg.configure_item(self.p, p1=self.pos, p2=self.prev_pos)
+        else:
+            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=[255,255,255,255], parent=self.parent)
         return self.p
     
     def apply_force(self, force):
