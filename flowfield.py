@@ -62,7 +62,7 @@ with dpg.window(label="FlowField", tag='flowfield', width=_width, height=_height
                 dpg.add_theme_color(dpg.mvThemeCol_ChildBg, _bg_color, category=dpg.mvThemeCat_Core)
     dpg.bind_item_theme('flowfield', flowfield_theme)
 
-    particles = [None] * 500
+    particles = [None] * 100
     for i in range(len(particles)):
         particles[i] = Particle(parent = 'flowfield', pos = [np.random.random() * _width, np.random.random() * _height])
         # _trash.append(particles[i].show())
@@ -88,10 +88,10 @@ while dpg.is_dearpygui_running():
             try:
                 force = flowfield[idx]
                 particle.follow(force)
+                _trash.append(particle.update())
+                particle.warp_around_edges(_width, _height)
             except Exception as e:
                 print(e)
-            _trash.append(particle.update())
-            particle.warp_around_edges(_width, _height)
         z += inc
     dpg.render_dearpygui_frame()
 
