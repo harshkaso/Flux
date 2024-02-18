@@ -16,18 +16,21 @@ class Particle:
         self.pos += self.vel
         self.acc = np.array([0.0,0.0])
         # self.p = dpg.draw_circle(center=self.pos, radius=3, fill=[255,255,255,50], color=[255,255,255,50], parent=self.parent)
-        self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=[255,255,255,255], parent=self.parent)
+        if self.p:
+            dpg.configure_item(self.p, p1=self.pos, p2=self.prev_pos)
+        else:
+            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=[255,255,255,255], parent=self.parent)
         return self.p
     
     def apply_force(self, force):
         self.acc = [self.acc[0] + force[0], self.acc[1] + force[1]]
     
     def warp_around_edges(self, width, height):
-        if self.pos[0] > width-1: self.pos[0] = 0 
-        if self.pos[0] < 0: self.pos[0] = width-1
+        if self.pos[0] >= width or self.pos[0] < 0:
+            self.pos[0] = (self.pos[0] + width) % width
 
-        if self.pos[1] > height-1: self.pos[1] = 0 
-        if self.pos[1] < 0: self.pos[1] = height-1
+        if self.pos[1] >= height or self.pos[1] < 0:
+            self.pos[1] = (self.pos[1] + height) % height
 
 
     def follow(self, force):
