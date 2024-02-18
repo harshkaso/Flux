@@ -8,6 +8,7 @@ class Particle:
         self.prev_pos = np.array(pos)
         self.parent = parent
         self.p = None
+        self.clr = [216,60,95,200]
 
     def update(self):
         self.prev_pos = np.copy(self.pos)
@@ -19,7 +20,7 @@ class Particle:
         if self.p:
             dpg.configure_item(self.p, p1=self.pos, p2=self.prev_pos)
         else:
-            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=[255,255,255,255], parent=self.parent)
+            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=self.clr, parent=self.parent)
         return self.p
     
     def apply_force(self, force):

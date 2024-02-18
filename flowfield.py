@@ -11,8 +11,8 @@ particles_total = 500
 _width = _cols * _scale
 _height = _rows * _scale
 _x = np.array([i/_cols for i in range(_cols)])
-_y = np.array([i/_cols for i in range(_rows)])
-_bg_color = [0,0,0,255]
+_y = np.array([i/_rows for i in range(_rows)])
+_bg_color = [1,5,58,255]
 dpg.create_context()
 dpg.create_viewport(title='Custom Title', width=_width, height=_height, resizable=False)
 dpg.setup_dearpygui()
@@ -26,7 +26,7 @@ flowfield_z = -1
 def recalc_particles():
     global z, inc, flowfield, flowfield_z
     if z - flowfield_z >= 0.01:
-        flowfield = _flowfield((_rows, _cols), z)
+        flowfield = _flowfield(z)
         flowfield_z = z
     for particle in particles:
         x = (particle.pos[0] // _scale) % _cols
@@ -35,10 +35,10 @@ def recalc_particles():
         try:
             force = flowfield[idx]
             particle.follow(force)
+            particle.update()
+            particle.warp_around_edges(_width, _height)
         except Exception as e:
             print(e)
-        particle.update()
-        particle.warp_around_edges(_width, _height)
     z += inc
 
 def _handle_frame_buffer(sender, buffer):
@@ -54,7 +54,6 @@ def _handle_frame_buffer(sender, buffer):
                 dpg.add_image('prev_frame', parent='flowfield', pos=(0,0))
                 # Adding a dimmer - once and for good
                 _background(opacity=10)
-            
             # We've stored current picture into the background texture and
             # are now ready to move particles around.
             recalc_particles()
@@ -62,18 +61,20 @@ def _handle_frame_buffer(sender, buffer):
             # to render correctly; might be the texture.  That's why we skip a frame.
             dpg.set_frame_callback(dpg.get_frame_count()+2, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
 
-def _flowfield(dim, z):
-    rows, cols = dim
-    flowfield = [None] * rows * cols
-    for y in range(rows):
-        for x in range(cols):
-            idx = x + y * cols
-            r = noise3(x/cols, y/rows, z)
+def _flowfield(z):
+    global _x, _y
+    flowfield = []
+    for y in _y:
+        for x in _x:
+            r = noise3(x, y, z)
             angle = r * np.pi * 2
-            flowfield[idx] = (np.cos(angle), np.sin(angle))
+            flowfield.append((np.cos(angle), np.sin(angle)))
     return flowfield
 
-def _background(clr=_bg_color[:3], opacity=255):
+def _background(clr=None, opacity=255):
+    global _bg_color
+    if clr == None:
+        clr = _bg_color[:3]
     x, y = dpg.get_viewport_client_width(), dpg.get_viewport_client_height()
     clr.append(opacity)
     background = dpg.draw_rectangle(pmin=(0,0), pmax=(x, y), parent='flowfield', fill=clr, color=clr)
@@ -86,10 +87,10 @@ with dpg.window(label="FlowField", tag='flowfield', width=_width, height=_height
     with dpg.theme() as flowfield_theme:
             with dpg.theme_component(dpg.mvAll):
                 dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
-                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, _bg_color, category=dpg.mvThemeCat_Core)
+                # dpg.add_theme_color(dpg.mvThemeCol_ChildBg, _bg_color, category=dpg.mvThemeCat_Core)
     dpg.bind_item_theme('flowfield', flowfield_theme)
 
-    particles = [ Particle(parent = 'flowfield', pos = [np.random.random() * _width, np.random.random() * _height]) for i in range(particles_total) ]
+    particles = np.array([ Particle(parent = 'flowfield', pos = [np.random.random() * _width, np.random.random() * _height]) for i in range(particles_total) ])
 
 
 dpg.show_viewport()
