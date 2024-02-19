@@ -10,8 +10,8 @@ particles_total = 500
 
 _width = _cols * _scale
 _height = _rows * _scale
-_x = np.array([i/_cols for i in range(_cols)])
-_y = np.array([i/_rows for i in range(_rows)])
+_x = np.arange(_cols)/_cols
+_y = np.arange(_rows)/_rows
 _bg_color = [1,5,58,255]
 dpg.create_context()
 dpg.create_viewport(title='Custom Title', width=_width, height=_height, resizable=False)
@@ -31,14 +31,14 @@ def recalc_particles():
     for particle in particles:
         x = (particle.pos[0] // _scale) % _cols
         y = particle.pos[1] // _scale
-        idx = int(x + y * _cols)
+        # idx = int(x + y * _cols)
         try:
-            force = flowfield[idx]
-            particle.follow(force)
+            angle = flowfield[int(y)][int(x)]
+            particle.follow((np.cos(angle), np.sin(angle)))
             particle.update()
             particle.warp_around_edges(_width, _height)
         except Exception as e:
-            print(e)
+            print(e )
     z += inc
 
 def _handle_frame_buffer(sender, buffer):
@@ -54,6 +54,7 @@ def _handle_frame_buffer(sender, buffer):
                 dpg.add_image('prev_frame', parent='flowfield', pos=(0,0))
                 # Adding a dimmer - once and for good
                 _background(opacity=10)
+
             # We've stored current picture into the background texture and
             # are now ready to move particles around.
             recalc_particles()
@@ -63,13 +64,15 @@ def _handle_frame_buffer(sender, buffer):
 
 def _flowfield(z):
     global _x, _y
-    flowfield = []
-    for y in _y:
-        for x in _x:
-            r = noise3(x, y, z)
-            angle = r * np.pi * 2
-            flowfield.append((np.cos(angle), np.sin(angle)))
-    return flowfield
+    angles = noise3array(_x, _y, np.array([z]))[0] * np.pi * 2
+    # flowfield = []
+    # for y in _y:
+    #     for x in _x:
+    #         r = noise3(x, y, z)
+    #         angle = r * np.pi * 2
+    #         flowfield.append((np.cos(angle), np.sin(angle)))
+    # flowfield = np.array((np.cos(angles), np.sin(angles)))
+    return angles
 
 def _background(clr=None, opacity=255):
     global _bg_color
