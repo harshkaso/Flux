@@ -3,9 +3,9 @@ from opensimplex import noise3array, random_seed
 from particle import Particle
 import numpy as np
 
-_scale = 15
-_cols = 40
-_rows = 20
+_scale = 50
+_cols = 20
+_rows = 10
 particles_total = 1000
 _two_pi = np.pi * 2
 
@@ -53,6 +53,7 @@ def _handle_frame_buffer(sender, buffer):
                 dpg.add_image('prev_frame', parent='flowfield', pos=(0,0))
                 # Adding a dimmer - once and for good
                 _background(opacity=10)
+                dpg.show_metrics()
                 
             # We've stored current picture into the background texture and
             # are now ready to move particles around.
@@ -64,7 +65,7 @@ def _handle_frame_buffer(sender, buffer):
 def _flowfield(z):
     global _x, _y, _two_pi
     return noise3array(_x, _y, np.array([z]))[0] * _two_pi
-    
+
 
 def _background(clr=_bg_color[:3], opacity=255):
     x, y = dpg.get_viewport_client_width(), dpg.get_viewport_client_height()
@@ -73,15 +74,28 @@ def _background(clr=_bg_color[:3], opacity=255):
     return background
 
 
+def _key_press(sender, key):
+    if key == dpg.mvKey_R:
+        random_seed()
+        for particle in particles:
+            particle.lifespan = 0
+
+def _mouse_move(sender, pointer_coord):
+    if dpg.is_item_hovered('flowfield'):
+        print(pointer_coord)
+
 with dpg.window(label="FlowField", tag='flowfield', width=_width, height=_height):
     dpg.set_primary_window('flowfield', True)
-    particles = np.array([ Particle(parent = 'flowfield', pos = [np.random.random() * _width, np.random.random() * _height]) for i in range(particles_total) ])
+    particles = np.array([ Particle(parent = 'flowfield', bounds=[_width, _height]) for i in range(particles_total) ])
 
 with dpg.theme() as flowfield_theme:
         with dpg.theme_component(dpg.mvAll):
             dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
             dpg.add_theme_color(dpg.mvThemeCol_ChildBg, _bg_color, category=dpg.mvThemeCat_Core)
 dpg.bind_item_theme('flowfield', flowfield_theme)
+
+with dpg.handler_registry():
+    dpg.add_key_press_handler(callback=_key_press)
 
 dpg.show_viewport()
 dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
