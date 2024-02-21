@@ -53,7 +53,6 @@ def _handle_frame_buffer(sender, buffer):
                 dpg.add_image('prev_frame', parent='flowfield', pos=(0,0))
                 # Adding a dimmer - once and for good
                 _background(opacity=10)
-                dpg.show_metrics()
                 
             # We've stored current picture into the background texture and
             # are now ready to move particles around.
