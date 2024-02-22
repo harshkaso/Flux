@@ -14,6 +14,7 @@ _height = _rows * _scale
 _x = np.arange(_cols)/_cols
 _y = np.arange(_rows)/_rows
 _bg_color = [1,5,58,255]
+
 random_seed()
 dpg.create_context()
 dpg.create_viewport(title='Flux', width=_width, height=_height, resizable=False)
@@ -34,9 +35,8 @@ def recalc_particles():
         x = (particle.pos[0] // _scale) % _cols
         y = particle.pos[1] // _scale
         angle = flowfield[int(y)][int(x)]
-        particle.apply_force((np.cos(angle), np.sin(angle)))
-        particle.update()
-        particle.warp_around_edges(_width, _height)
+        particle.apply_force(np.array([np.cos(angle), np.sin(angle)]))
+        particle.update_properties()
     z += inc
 
 
@@ -53,7 +53,6 @@ def _handle_frame_buffer(sender, buffer):
                 dpg.add_image('prev_frame', parent='flowfield', pos=(0,0))
                 # Adding a dimmer - once and for good
                 _background(opacity=10)
-                dpg.show_metrics()
                 
             # We've stored current picture into the background texture and
             # are now ready to move particles around.
@@ -100,7 +99,6 @@ with dpg.handler_registry():
 dpg.show_viewport()
 dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
 dpg.start_dearpygui()
-# dpg.show_metrics()
 # dpg.set_viewport_vsync(False)
 
 dpg.destroy_context()
