@@ -85,7 +85,7 @@ def _mouse_move(sender, pointer_coord):
 
 with dpg.window(label="FlowField", tag='flowfield', width=_width, height=_height):
     dpg.set_primary_window('flowfield', True)
-    particles = np.array([ Particle(parent = 'flowfield', bounds=[_width, _height]) for i in range(particles_total) ])
+    particles = [ Particle(parent = 'flowfield', bounds=[_width, _height]) for i in range(particles_total) ]
 
 with dpg.theme() as flowfield_theme:
         with dpg.theme_component(dpg.mvAll):

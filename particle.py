@@ -33,7 +33,7 @@ class Particle:
         self.vel += self.acc
         self.vel = self.clamp(self.vel, self.speed_limit)
         self.pos += self.vel
-        self.acc /= 2
+        self.acc *= 0
 
         r = 128 + int((255 / self.speed_limit) * self.vel[0])
         g = 128 + int((255 / self.speed_limit) * self.vel[1])
@@ -43,7 +43,7 @@ class Particle:
         if self.p:
             dpg.configure_item(self.p, p1=self.pos, p2=self.prev_pos, color=color)
         else:
-            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=[0,0,0,255], parent=self.parent)
+            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=color, parent=self.parent)
         
         # Warp around the edges if the particle has gone out of bounds
         self.pos[0] = (self.pos[0] % self.horz_limit)
