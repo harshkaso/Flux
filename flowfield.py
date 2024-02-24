@@ -7,7 +7,7 @@ _side_panel_width = 200
 
 _scale = 50
 _cols = 20
-_rows = 10
+_rows = 15
 particles_total = 1000
 _two_pi = np.pi * 2
 
@@ -52,7 +52,7 @@ def _handle_frame_buffer(sender, buffer):
                     width = dpg.get_viewport_client_width()
                     height = dpg.get_viewport_client_height()
                     dpg.add_raw_texture(width=width, height=height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev_frame")
-                dpg.add_image('prev_frame', parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(dpg.get_item_width('flowfield')/width, 1))
+                dpg.add_image('prev_frame', width=_flowfield_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(_flowfield_width/width, 1))
 
                 # Adding a dimmer - once and for good
                 _background(opacity=10)
@@ -98,8 +98,7 @@ with dpg.window(label="FlowField", tag='flowfield', pos=(_side_panel_width, 0), 
 
     # Side Panel
     with dpg.child_window(label='Properties', tag='properties', pos=(_flowfield_width,0), width=_side_panel_width, height=-1):
-        dpg.add_window()
-
+        pass
 with dpg.handler_registry():
     dpg.add_key_press_handler(callback=_key_press)
 
