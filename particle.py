@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 import numpy as np
 
 class Particle:
-    def __init__(self, parent, bounds, pos=None, vel=[0.0, 0.0], acc=[0.0, 0.0], max_age=150, max_speed=4, mass=2) -> None:
+    def __init__(self, parent, bounds, pos=None, vel=[0.0, 0.0], acc=[0.0, 0.0], max_age=150, max_speed=4, mass=2, visible=True) -> None:
         self.horz_limit, self.vert_limit = bounds
         if pos == None:
             self.pos = np.array([np.random.random()*self.horz_limit, np.random.random()*self.vert_limit])
@@ -17,38 +17,43 @@ class Particle:
         self.age = self.lifespan
         self.parent = parent
         self.speed_limit = max_speed
-        self.p = None
+        self.visible = visible
+        self.p = dpg.draw_line(p1=(0,0), p2=(0,0), show=False)
+
+    def show(self, visible):
+        if self.visible ^ visible:
+            self.visible = visible
+            if self.p:
+                dpg.configure_item(self.p, show=self.visible)
 
     def update_properties(self):
-        self.lifespan -= 1
-        if self.lifespan < 1:
-            self.max_age = np.random.randint(50,150)
-            self.pos = np.array([np.random.random()*self.horz_limit, np.random.random()*self.vert_limit])
-            self.lifespan = np.random.randint(10,self.max_age)
-            self.age = self.lifespan
-            self.vel = np.array([0.0,0.0])
-            self.acc = np.array([0.0,0.0])
-        
-        self.prev_pos = self.pos.copy()
-        self.vel += self.acc
-        self.vel = self.clamp(self.vel, self.speed_limit)
-        self.pos += self.vel
-        self.acc *= 0
+        if self.visible:
+            self.lifespan -= 1
+            if self.lifespan < 1:
+                self.max_age = np.random.randint(50,150)
+                self.pos = np.array([np.random.random()*self.horz_limit, np.random.random()*self.vert_limit])
+                self.lifespan = np.random.randint(10,self.max_age)
+                self.age = self.lifespan
+                self.vel = np.array([0.0,0.0])
+                self.acc = np.array([0.0,0.0])
+            
+            self.prev_pos = self.pos.copy()
+            self.vel += self.acc
+            self.vel = self.clamp(self.vel, self.speed_limit)
+            self.pos += self.vel 
+            self.acc *= 0
 
-        r = 128 + int((255 / self.speed_limit) * self.vel[0])
-        g = 128 + int((255 / self.speed_limit) * self.vel[1])
-        b = 255
-        o = 255 - int((self.lifespan / self.age) * 255)
-        color = [ r, g, b, o]
-        if self.p:
+            r = 128 + int((255 / self.speed_limit) * self.vel[0])
+            g = 128 + int((255 / self.speed_limit) * self.vel[1])
+            b = 255
+            o = 255 - int((self.lifespan / self.age) * 255)
+            color = [ r, g, b, o]
             dpg.configure_item(self.p, p1=self.pos, p2=self.prev_pos, color=color)
-        else:
-            self.p = dpg.draw_line(p1=self.pos, p2=self.prev_pos, color=color, parent=self.parent)
+            
         
-        # Warp around the edges if the particle has gone out of bounds
-        self.pos[0] = (self.pos[0] % self.horz_limit)
-        self.pos[1] = (self.pos[1] % self.vert_limit)
-        return self.p
+            # Warp around the edges if the particle has gone out of bounds
+            self.pos[0] = (self.pos[0] % self.horz_limit)
+            self.pos[1] = (self.pos[1] % self.vert_limit)
 
     def apply_force(self, force):
         # give particles a bit of inertia for smoother lines
