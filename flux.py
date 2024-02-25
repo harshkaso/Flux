@@ -39,7 +39,7 @@ def recalc_particles():
     if z - flowfield_z >= 0.01:
         flowfield = _flowfield(z)
         flowfield_z = z
-    for particle in particles:
+    for particle in particles[:ttl_particles]:
         x = (particle.pos[0] // scale) % cols
         y = particle.pos[1] // scale
         angle = flowfield[int(y)][int(x)]
