@@ -8,11 +8,12 @@ TAU = np.pi * 2
 # CONFIG VARIABLES
 ff_width  = 1000        # Flowfield Width
 ff_height = 750         # Flowfield Height
-n_scale =  0.01/2       # Noise Scale
+n_scale =  0.1         # Noise Scale
+ttl_particles = 1000    # Total Particles
 
 bg_color = [1,5,58,255] # Background Color
 
-ttl_particles = 1000     # Total Particles
+# CONTAINERS
 positions = []          # Particle Positions
 particles = []          # Particle Objects
 
@@ -20,10 +21,9 @@ noise = fns.Noise()
 
 def spawn_paricles():
     global positions, ff_width, ff_height, particles, ttl_particles
-    positions = fns.empty_coords(ttl_particles)
-    positions[0,:] = np.random.uniform(0,ff_width, ttl_particles)
-    positions[1,:] = np.random.uniform(0,ff_height, ttl_particles)
-    positions[2,:] = np.zeros(ttl_particles)
+    positions = np.ndarray((2, ttl_particles))
+    positions[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]
+    positions[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)]
     # for each coardinates draw a particle
     for i in range(ttl_particles):
         p = positions[:,i]
@@ -31,14 +31,17 @@ def spawn_paricles():
 
 def recalc_particles():
     global noise, TAU, positions, particles, ttl_particles, ff_width, ff_height
-    positions[2,:] = np.repeat(dpg.get_frame_count() * n_scale, ttl_particles)
-    angles = noise.genFromCoords(positions) * TAU
+    coords = fns.empty_coords(ttl_particles)
+    coords[0,:] = positions[0,:] * n_scale
+    coords[1,:] = positions[1,:] * n_scale
+    coords[2,:] = np.repeat(dpg.get_frame_count()*n_scale*n_scale, ttl_particles)
+    angles = noise.genFromCoords(coords) * TAU
     for i, a in enumerate(angles):
         p = positions[:,i]
         r = int((p[0] / ff_width) * 255)
         g = int((p[1] / ff_height) * 255)
-        b = 255
-        o = 10
+        b = int((p[0]+1/p[1]+1) * 255)
+        o = 50
         dpg.configure_item(particles[i], center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
         p[0] += np.cos(a)
         p[1] += np.sin(a)
