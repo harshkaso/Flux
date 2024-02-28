@@ -3,13 +3,13 @@ from opensimplex import noise3array, random_seed
 from particle import Particle
 import numpy as np
 
-TWO_PI = np.pi * 2
+TAU = np.pi * 2
 
 flowfield = []
 
-scale = 50
-cols = 20
-rows = 15
+scale = 25
+cols = 40
+rows = 30
 
 particles_val = 5
 particles_mul = 100
@@ -20,8 +20,8 @@ min_particles = 2 # x 100 (multiplier)
 side_panel_width = 250
 flowfield_width = cols * scale
 flowfield_height = rows * scale
-x_range = np.arange(cols)/cols
-y_range = np.arange(rows)/rows
+x_range = np.arange(cols)/scale
+y_range = np.arange(rows)/scale
 bg_color = [1,5,58,255]
 
 z = 0
@@ -31,8 +31,8 @@ flowfield_z = -1
 random_seed()
 
 def _flowfield(z):
-    global x_range, y_range, TWO_PI
-    return noise3array(x_range, y_range, np.array([z]))[0] * TWO_PI
+    global x_range, y_range, TAU
+    return noise3array(x_range, y_range, np.array([z]))[0] * TAU
 
 def recalc_particles():
     global z, inc, flowfield, flowfield_z
@@ -107,9 +107,9 @@ dpg.setup_dearpygui()
 with dpg.window(label="FlowField", tag='flowfield', pos=(side_panel_width, 0), width=flowfield_width, height=flowfield_height) as flowfield_window:
     dpg.set_primary_window('flowfield', True)
     with dpg.theme() as flowfield_theme:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
-                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, bg_color, category=dpg.mvThemeCat_Core)
+        with dpg.theme_component(dpg.mvAll):
+            dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
+            dpg.add_theme_color(dpg.mvThemeCol_ChildBg, bg_color, category=dpg.mvThemeCat_Core)
     dpg.bind_item_theme(flowfield_window, flowfield_theme)
     particles = [ Particle(parent = flowfield_window, bounds=[flowfield_width,flowfield_height], visible=False) for i in range(max_particles*particles_mul) ]
     show_n_particles(None, ttl_particles)
@@ -129,7 +129,7 @@ with dpg.handler_registry():
 
 dpg.show_viewport()
 dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
-dpg.set_viewport_vsync(False)
+# dpg.set_viewport_vsync(False)
 dpg.show_metrics()
 dpg.start_dearpygui()
 
