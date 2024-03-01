@@ -1,3 +1,3 @@
 dearpygui==1.10.1
 numpy==1.24.2
-opensimplex==0.4.5
+pyfastnoisesimd==0.4.2

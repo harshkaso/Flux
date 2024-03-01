@@ -1,136 +1,178 @@
 import dearpygui.dearpygui as dpg
-from opensimplex import noise3array, random_seed
-from particle import Particle
+import pyfastnoisesimd as fns
 import numpy as np
 
-TWO_PI = np.pi * 2
+# CONSTANTS
+TAU = np.pi * 2
 
-flowfield = []
+# CONFIG VARIABLES
+sp_width = 250          # Side Panel Width
+ff_width  = 1000        # Flowfield Width
+ff_height = 750         # Flowfield Height
+n_scale = 0.1           # Noise Scale
+t_scale = 0.01          # Time Scale
 
-scale = 50
-cols = 20
-rows = 15
+## PARTICLE CONFIG
+ttl_particles = 1000    # Total Particles
+min_age = 50           # Max Age of Particles
+max_age = 250           # Min Age of Particles
+speed = 1               # Speed of particles
 
-particles_val = 5
-particles_mul = 100
-ttl_particles = particles_val * particles_mul 
-max_particles = 10 # x 100 (multiplier)
-min_particles = 2 # x 100 (multiplier)
+bg_color = [1,5,58,255] # Background Color
 
-side_panel_width = 250
-flowfield_width = cols * scale
-flowfield_height = rows * scale
-x_range = np.arange(cols)/cols
-y_range = np.arange(rows)/rows
-bg_color = [1,5,58,255]
+# CONTAINERS
+properties = []          # Particle Properties (position, age)
+particles = []          # Particle Objects
 
-z = 0
-inc = 0.001
-flowfield_z = -1
+noise = fns.Noise()
 
-random_seed()
-
-def _flowfield(z):
-    global x_range, y_range, TWO_PI
-    return noise3array(x_range, y_range, np.array([z]))[0] * TWO_PI
+def spawn_paricles():
+    global properties, ff_width, ff_height, particles, ttl_particles, min_age, max_age
+    properties = np.ndarray((3, ttl_particles))
+    properties[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]  # X
+    properties[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)] # Y
+    properties[2,:] = [np.random.randint(min_age, max_age) for _ in range(ttl_particles)] # age
+    # for each coardinates draw a particle
+    for i in range(ttl_particles):
+        p = properties[:,i]
+        particles.append(dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', show=False))
 
 def recalc_particles():
-    global z, inc, flowfield, flowfield_z
-    if z - flowfield_z >= 0.01:
-        flowfield = _flowfield(z)
-        flowfield_z = z
-    for particle in particles[:ttl_particles]:
-        x = (particle.pos[0] // scale) % cols
-        y = particle.pos[1] // scale
-        angle = flowfield[int(y)][int(x)]
-        particle.apply_force(np.array([np.cos(angle), np.sin(angle)]))
-        particle.update_properties()
-    z += inc
+    global noise, TAU, properties, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
+    coords = fns.empty_coords(ttl_particles)
+    coords[0,:] = properties[0,:] * n_scale
+    coords[1,:] = properties[1,:] * n_scale
+    coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, ttl_particles)
+    angles = noise.genFromCoords(coords) * TAU
+    for i, a in enumerate(angles):
+        p = properties[:,i]
+        r = int((p[0] / ff_width) * 255)
+        g = int((p[1] / ff_height) * 255)
+        b = int((p[0]+1/p[1]+1) * 255)
+        o = 50
 
-def _background(clr=bg_color[:3], opacity=255):
-    x, y = dpg.get_viewport_client_width(), dpg.get_viewport_client_height()
+        dpg.configure_item(particles[i], center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
+        p[0] += np.cos(a) * speed
+        p[1] += np.sin(a) * speed
+        p[2] -= 1
+        if not (p[0] > 0 and p[0] < ff_width and p[1] > 0) or p[2] == 0:
+            # if particle is not (on-screen) or age == 0
+            # reset the particle 
+            p[0] = np.random.random() * ff_width
+            p[1] = np.random.random() * ff_height
+            p[2] = np.random.randint(min_age, max_age)
+
+def background(clr=bg_color[:3], opacity=255):
+    global ff_width, ff_height
     clr.append(opacity)
-    background = dpg.draw_rectangle(tag='background', pmin=(0,0), pmax=(flowfield_width, flowfield_height), parent='flowfield', fill=clr, color=clr)
-    return background
-
-def _handle_frame_buffer(sender, buffer):
-    with dpg.mutex():
-        if dpg.does_item_exist("flowfield"):
-            if dpg.does_item_exist('prev_frame'):
-                dpg.set_value('prev_frame', buffer)
-            else:
-                with dpg.texture_registry():
-                    width = dpg.get_viewport_client_width()
-                    height = dpg.get_viewport_client_height()
-                    dpg.add_raw_texture(width=width, height=height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev_frame")
-                dpg.add_image('prev_frame', width=flowfield_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(flowfield_width/width, 1))
-
-                # Adding a dimmer - once and for good
-                _background(opacity=10)
-                
-            # We've stored current picture into the background texture and
-            # are now ready to move particles around.
-            recalc_particles()
-            # Run the next update as soon as we can - something needs an extra frame
-            # to render correctly; might be the texture.  That's why we skip a frame.
-            dpg.set_frame_callback(dpg.get_frame_count()+2, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
-
-def _key_press(sender, key):
-    if key == dpg.mvKey_R:
-        random_seed()
-        for particle in particles:
-            particle.lifespan = 0
-
-def show_n_particles(sender, n):
-    global particles, ttl_particles, particles_mul
-    if sender:
-        n *= particles_mul 
-        dpg.configure_item(sender, format=n)
-    if ttl_particles <= n:
-        [particle.show(True) for particle in particles[:n]]
+    if dpg.does_item_exist('background'):
+        dpg.configure_item('background', fill = clr, color=clr)
     else:
-        [particle.show(False) for particle in particles[n:ttl_particles]]
-    ttl_particles = n
+        dpg.draw_rectangle(tag='background', pmin=(0,0), pmax=(ff_width, ff_height), parent='flowfield', fill=clr, color=clr)
+
+def init_frame_buffer(sender, buffer):
+    # Initiate handling of frame buffer
+    global ff_width, ff_height, ttl_particles
+    # First resolve the dimensions
+    with dpg.mutex():
+        # Window dimensions
+        w_height = dpg.get_viewport_client_height()
+        w_width = dpg.get_viewport_client_width()
+        # Setup Initial Frame
+        with dpg.texture_registry():
+            dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev_frame")
+            # dpg.add_dynamic_texture(width=w_width, height=w_height, default_value=buffer, tag="prev_frame")
+        dpg.add_image('prev_frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
+        background(opacity=10)
+        spawn_paricles()
+        # Start the frame buffer
+        dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))
 
 
-def _mouse_move(sender, pointer_coord):
-    if dpg.is_item_hovered('flowfield'):
-        print(pointer_coord)
+def handle_frame_buffer(sender, buffer):
+    with dpg.mutex():
+        dpg.set_value('prev_frame', buffer)
+        recalc_particles()
+        dpg.set_frame_callback(dpg.get_frame_count()+2, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))
 
 
+def setup_flux():
+    # Setup flux window
+    dpg.create_context()
+    dpg.create_viewport(title='Flux', width=ff_width+sp_width, height=ff_height, resizable=False)
+    dpg.setup_dearpygui()
 
-dpg.create_context()
-dpg.create_viewport(title='Flux', width=flowfield_width + side_panel_width, height=flowfield_height, resizable=False)
-dpg.setup_dearpygui()
+    # Callbacks
+    def set_n_scale(sender, data):
+        global n_scale
+        n_scale = data
 
+    def set_t_scale(sender, data):
+        global t_scale
+        t_scale = data
 
-with dpg.window(label="FlowField", tag='flowfield', pos=(side_panel_width, 0), width=flowfield_width, height=flowfield_height) as flowfield_window:
-    dpg.set_primary_window('flowfield', True)
-    with dpg.theme() as flowfield_theme:
+    def set_particle_speed(sender, data):
+        global speed
+        speed = data
+
+    def set_min_max_age(sender, data):
+        global min_age, max_age
+        if sender == 'min-age':
+            min_age = data
+        elif sender == 'max-age':
+            max_age = data
+
+    def handle_dropdown(sender, data, group):
+        if dpg.is_item_shown(group):
+            dpg.configure_item(sender, direction=dpg.mvDir_Right)
+            dpg.configure_item(group, show=False)
+        else:
+            dpg.configure_item(sender, direction=dpg.mvDir_Down)
+            dpg.configure_item(group, show=True)
+
+    with dpg.window(tag='flowfield', pos=(0,0)):
+        dpg.set_primary_window('flowfield', True)
+        with dpg.theme() as flowfield_theme:
             with dpg.theme_component(dpg.mvAll):
                 dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
                 dpg.add_theme_color(dpg.mvThemeCol_ChildBg, bg_color, category=dpg.mvThemeCat_Core)
-    dpg.bind_item_theme(flowfield_window, flowfield_theme)
-    particles = [ Particle(parent = flowfield_window, bounds=[flowfield_width,flowfield_height], visible=False) for i in range(max_particles*particles_mul) ]
-    show_n_particles(None, ttl_particles)
+    
+        dpg.bind_item_theme('flowfield', flowfield_theme)
 
-    # Side Panel
-    with dpg.child_window(label='Properties', tag='properties', pos=(flowfield_width,0), width=side_panel_width, height=-1):
-        with dpg.theme() as flowfield_theme:
-            with dpg.theme_component(dpg.mvAll):
-                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 8)
-        dpg.bind_item_theme('properties', flowfield_theme)
-        dpg.add_spacer(height=5)
-        dpg.add_slider_int(label='particles', width=150, callback=show_n_particles, default_value=particles_val, max_value=max_particles, min_value=min_particles, format=ttl_particles)
-   
-with dpg.handler_registry():
-    dpg.add_key_press_handler(callback=_key_press)
+        with dpg.child_window(tag='parameters', pos=(ff_width, 0), width=sp_width, height=-1):
+            with dpg.theme() as side_panel_theme:
+                with dpg.theme_component(dpg.mvAll):
+                    dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 8)
+            dpg.bind_item_theme('parameters', side_panel_theme)
+            # Settings for parameters
+            dpg.add_spacer(height=3)
+            with dpg.group(horizontal=True):
+                dpg.add_button(tag='ff-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='flowfield-settings')
+                dpg.add_text(default_value='Flowfield Properties')
+            with dpg.group(tag='flowfield-settings'):
+                dpg.add_slider_float(width=sp_width/2, label='noisescale', min_value=0.05, default_value=n_scale, max_value=3, callback=set_n_scale)
+                dpg.add_slider_float(width=sp_width/2, label='timescale', min_value=0, default_value=t_scale, max_value=0.1, callback=set_t_scale)
+            dpg.add_separator()
+            with dpg.group(horizontal=True):
+                dpg.add_button(tag='pp-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-settings')
+                dpg.add_text(default_value='Particle Properties')
+            with dpg.group(tag='particle-settings'):
+                dpg.add_slider_float(width=sp_width/2, label='speed', min_value=0.5, default_value=speed, max_value=4, callback=set_particle_speed)
+                dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
+                dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
+            dpg.add_separator()
+    
+def start_flux():
+    # Start Flux
+    setup_flux()
+    dpg.show_viewport()
+    dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
+    # dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
+    dpg.set_viewport_vsync(False)
+    # dpg.show_metrics()
+    dpg.start_dearpygui()
+    dpg.destroy_context()
 
 
-dpg.show_viewport()
-dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
-dpg.set_viewport_vsync(False)
-dpg.show_metrics()
-dpg.start_dearpygui()
-
-dpg.destroy_context()
+if __name__ == '__main__':
+    start_flux()
