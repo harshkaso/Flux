@@ -21,37 +21,36 @@ speed = 1               # Speed of particles
 bg_color = [1,5,58,255] # Background Color
 
 # CONTAINERS
-properties = []          # Particle Properties (position, age)
 particles = []          # Particle Objects
 
 noise = fns.Noise()
 
 def spawn_paricles():
-    global properties, ff_width, ff_height, particles, ttl_particles, min_age, max_age
-    properties = np.ndarray((3, ttl_particles))
-    properties[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]  # X
-    properties[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)] # Y
-    properties[2,:] = [np.random.randint(min_age, max_age) for _ in range(ttl_particles)] # age
+    global ff_width, ff_height, particles, ttl_particles, min_age, max_age
+    particles = np.ndarray((4, ttl_particles))
+    particles[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]  # X
+    particles[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)] # Y
+    particles[2,:] = [np.random.randint(min_age, max_age) for _ in range(ttl_particles)] # age
     # for each coardinates draw a particle
     for i in range(ttl_particles):
-        p = properties[:,i]
-        particles.append(dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', show=False))
+        p = particles[:,i]
+        particles[3,i] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', show=False)
 
 def recalc_particles():
-    global noise, TAU, properties, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
+    global noise, TAU, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
     coords = fns.empty_coords(ttl_particles)
-    coords[0,:] = properties[0,:] * n_scale
-    coords[1,:] = properties[1,:] * n_scale
+    coords[0,:] = particles[0,:] * n_scale
+    coords[1,:] = particles[1,:] * n_scale
     coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, ttl_particles)
     angles = noise.genFromCoords(coords) * TAU
     for i, a in enumerate(angles):
-        p = properties[:,i]
+        p = particles[:,i]
         r = int((p[0] / ff_width) * 255)
         g = int((p[1] / ff_height) * 255)
         b = int((p[0]+1/p[1]+1) * 255)
         o = 50
 
-        dpg.configure_item(particles[i], center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
+        dpg.configure_item(int(p[3]), center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
         p[0] += np.cos(a) * speed
         p[1] += np.sin(a) * speed
         p[2] -= 1
@@ -153,6 +152,7 @@ def setup_flux():
                 dpg.add_slider_float(width=sp_width/2, label='noisescale', min_value=0.05, default_value=n_scale, max_value=3, callback=set_n_scale)
                 dpg.add_slider_float(width=sp_width/2, label='timescale', min_value=0, default_value=t_scale, max_value=0.1, callback=set_t_scale)
             dpg.add_separator()
+            
             with dpg.group(horizontal=True):
                 dpg.add_button(tag='pp-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-settings')
                 dpg.add_text(default_value='Particle Properties')
