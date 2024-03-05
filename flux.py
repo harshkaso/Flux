@@ -1,11 +1,12 @@
 import dearpygui.dearpygui as dpg
 import pyfastnoisesimd as fns
 import numpy as np
+from presets import color_by_position
 
 # CONSTANTS
 TAU = np.pi * 2
 
-# CONFIG VARIABLES
+# FLOWFIELD CONFIG
 sp_width = 250          # Side Panel Width
 ff_width  = 1000        # Flowfield Width
 ff_height = 750         # Flowfield Height
@@ -17,6 +18,9 @@ ttl_particles = 1000    # Total Particles
 min_age = 50           # Max Age of Particles
 max_age = 250           # Min Age of Particles
 speed = 1               # Speed of particles
+
+min_rgb = [58,78,243,255]
+max_rgb = [203,218,255,255]
 
 bg_color = [1,5,58,255] # Background Color
 
@@ -46,15 +50,17 @@ def recalc_particles():
 
     for i, a in enumerate(angles):
         p = particles[:,i]
-        r = int((p[0] / ff_width) * 255)
-        g = int((p[1] / ff_height) * 255)
-        b = int((p[0]+1/p[1]+1) * 255)
-        o = 50
+        # r = int((p[0] / ff_width) * 255)
+        # g = int((p[1] / ff_height) * 255)
+        # b = int((p[0]+1/p[1]+1) * 255)
+        # o = 50
+        r, g, b, o = color_by_position(p, ff_width, ff_height, min_rgb, max_rgb)
         dpg.configure_item(int(p[3]), center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
         
         p[0] += np.cos(a) * speed
         p[1] += np.sin(a) * speed
         p[2] -= 1
+        
         if not (p[0] > 0 and p[0] < ff_width and p[1] > 0 and p[1] < ff_height) or p[2] == 0:
             # if particle is not (on-screen) or age == 0
             # reset the particle 
@@ -121,6 +127,13 @@ def setup_flux():
         elif sender == 'max-age':
             max_age = data
 
+    def set_min_max_rgb(sender, data):
+        global min_rgb, max_rgb
+        if sender == 'min_rgb':
+            min_rgb = [int(c*255) for c in data]
+        elif sender == 'max_rgb':
+            max_rgb = [int(c*255) for c in data]
+
     def handle_dropdown(sender, data, group):
         if dpg.is_item_shown(group):
             dpg.configure_item(sender, direction=dpg.mvDir_Right)
@@ -160,6 +173,8 @@ def setup_flux():
                 dpg.add_slider_float(width=sp_width/2, label='speed', min_value=0.5, default_value=speed, max_value=4, callback=set_particle_speed)
                 dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
                 dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
+                dpg.add_color_edit(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, callback=set_min_max_rgb)
+                dpg.add_color_edit(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, callback=set_min_max_rgb)
             dpg.add_separator()
 
             dpg.add_checkbox(label='Background', default_value=True)
@@ -169,8 +184,8 @@ def start_flux():
     setup_flux()
     dpg.show_viewport()
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
-    dpg.set_viewport_vsync(False)
-    dpg.show_metrics()
+    # dpg.set_viewport_vsync(False)
+    # dpg.show_metrics()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
