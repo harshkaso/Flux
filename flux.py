@@ -34,7 +34,7 @@ def spawn_paricles():
     # for each coardinates draw a particle
     for i in range(ttl_particles):
         p = particles[:,i]
-        particles[3,i] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', show=False)
+        particles[3,i] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', show=False) # Reference to drawn object
 
 def recalc_particles():
     global noise, TAU, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
@@ -43,18 +43,19 @@ def recalc_particles():
     coords[1,:] = particles[1,:] * n_scale
     coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, ttl_particles)
     angles = noise.genFromCoords(coords) * TAU
+
     for i, a in enumerate(angles):
         p = particles[:,i]
         r = int((p[0] / ff_width) * 255)
         g = int((p[1] / ff_height) * 255)
         b = int((p[0]+1/p[1]+1) * 255)
         o = 50
-
         dpg.configure_item(int(p[3]), center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
+        
         p[0] += np.cos(a) * speed
         p[1] += np.sin(a) * speed
         p[2] -= 1
-        if not (p[0] > 0 and p[0] < ff_width and p[1] > 0) or p[2] == 0:
+        if not (p[0] > 0 and p[0] < ff_width and p[1] > 0 and p[1] < ff_height) or p[2] == 0:
             # if particle is not (on-screen) or age == 0
             # reset the particle 
             p[0] = np.random.random() * ff_width
@@ -80,7 +81,6 @@ def init_frame_buffer(sender, buffer):
         # Setup Initial Frame
         with dpg.texture_registry():
             dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev_frame")
-            # dpg.add_dynamic_texture(width=w_width, height=w_height, default_value=buffer, tag="prev_frame")
         dpg.add_image('prev_frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
         background(opacity=10)
         spawn_paricles()
@@ -161,15 +161,16 @@ def setup_flux():
                 dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
                 dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
             dpg.add_separator()
+
+            dpg.add_checkbox(label='Background', default_value=True)
     
 def start_flux():
     # Start Flux
     setup_flux()
     dpg.show_viewport()
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
-    # dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=_handle_frame_buffer))
     dpg.set_viewport_vsync(False)
-    # dpg.show_metrics()
+    dpg.show_metrics()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
