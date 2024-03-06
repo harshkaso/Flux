@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 import pyfastnoisesimd as fns
 import numpy as np
 from presets import color_by_position
+import timeit
 
 # CONSTANTS
 TAU = np.pi * 2
@@ -31,14 +32,17 @@ noise = fns.Noise()
 
 def spawn_paricles():
     global ff_width, ff_height, particles, ttl_particles, min_age, max_age
-    particles = np.ndarray((4, ttl_particles))
+    particles = np.ndarray((8, ttl_particles))
     particles[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]  # X
     particles[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)] # Y
     particles[2,:] = [np.random.randint(min_age, max_age) for _ in range(ttl_particles)] # age
+    particles[3,:] = np.repeat(bg_color[0], ttl_particles) # Red
+    particles[4,:] = np.repeat(bg_color[1], ttl_particles) # Green
+    particles[5,:] = np.repeat(bg_color[2], ttl_particles) # Blue
+    particles[6,:] = np.repeat(50, ttl_particles) # Opacity
     # for each coardinates draw a particle
-    for i in range(ttl_particles):
-        p = particles[:,i]
-        particles[3,i] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', show=False) # Reference to drawn object
+    for p in particles.T:
+        p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=bg_color, color=bg_color, show=True) # Reference to drawn object
 
 def recalc_particles():
     global noise, TAU, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
@@ -47,21 +51,17 @@ def recalc_particles():
     coords[1,:] = particles[1,:] * n_scale
     coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, ttl_particles)
     angles = noise.genFromCoords(coords) * TAU
-
-    for i, a in enumerate(angles):
-        p = particles[:,i]
-        # r = int((p[0] / ff_width) * 255)
-        # g = int((p[1] / ff_height) * 255)
-        # b = int((p[0]+1/p[1]+1) * 255)
-        # o = 50
-        r, g, b, o = color_by_position(p, ff_width, ff_height, min_rgb, max_rgb)
-        dpg.configure_item(int(p[3]), center=(p[0], p[1]), fill=[r,g,b,o], color=[r,g,b,o], show=True)
-        
-        p[0] += np.cos(a) * speed
-        p[1] += np.sin(a) * speed
-        p[2] -= 1
-        
-        if not (p[0] > 0 and p[0] < ff_width and p[1] > 0 and p[1] < ff_height) or p[2] == 0:
+    cos_angles = np.cos(angles)
+    sin_angles = np.sin(angles)
+    particles[0,:] = np.add(particles[0,:], np.multiply(cos_angles, speed))
+    particles[1,:] = np.add(particles[1,:], np.multiply(sin_angles, speed))
+    particles[2,:] = np.add(particles[2,:], np.repeat(-1, ttl_particles))
+    particles[3:6,:] = color_by_position(particles, ff_width, ff_height, min_rgb, max_rgb) # RGB
+    
+    for p in particles.T:
+        clr = list(p[3:7])
+        dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr)
+        if not (0 < p[0] < ff_width and 0 < p[1] < ff_height) or p[2] == 0:
             # if particle is not (on-screen) or age == 0
             # reset the particle 
             p[0] = np.random.random() * ff_width
@@ -87,8 +87,8 @@ def init_frame_buffer(sender, buffer):
         # Setup Initial Frame
         with dpg.texture_registry():
             dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev_frame")
-        dpg.add_image('prev_frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
         background(opacity=10)
+        dpg.add_image('prev_frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
         spawn_paricles()
         # Start the frame buffer
         dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))
@@ -173,8 +173,12 @@ def setup_flux():
                 dpg.add_slider_float(width=sp_width/2, label='speed', min_value=0.5, default_value=speed, max_value=4, callback=set_particle_speed)
                 dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
                 dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
-                dpg.add_color_edit(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, callback=set_min_max_rgb)
-                dpg.add_color_edit(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, callback=set_min_max_rgb)
+                with dpg.group(indent=5, horizontal=True):
+                    dpg.add_button(tag='pc-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-color-settings')
+                    dpg.add_text(default_value='Particle Color')
+                with dpg.group(tag='particle-color-settings'):
+                    dpg.add_color_picker(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, callback=set_min_max_rgb)
+                    dpg.add_color_picker(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, callback=set_min_max_rgb)
             dpg.add_separator()
 
             dpg.add_checkbox(label='Background', default_value=True)
