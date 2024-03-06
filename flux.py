@@ -2,7 +2,6 @@ import dearpygui.dearpygui as dpg
 import pyfastnoisesimd as fns
 import numpy as np
 from presets import color_by_position
-import timeit
 
 # CONSTANTS
 TAU = np.pi * 2
@@ -176,7 +175,7 @@ def setup_flux():
                 with dpg.group(indent=5, horizontal=True):
                     dpg.add_button(tag='pc-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-color-settings')
                     dpg.add_text(default_value='Particle Color')
-                with dpg.group(tag='particle-color-settings'):
+                with dpg.group(indent=5, tag='particle-color-settings'):
                     dpg.add_color_picker(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, callback=set_min_max_rgb)
                     dpg.add_color_picker(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, callback=set_min_max_rgb)
             dpg.add_separator()
