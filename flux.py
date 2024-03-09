@@ -15,8 +15,8 @@ t_scale = 0.01          # Time Scale
 
 ## PARTICLE CONFIG
 ttl_particles = 1000    # Total Particles
-min_age = 50           # Max Age of Particles
-max_age = 250           # Min Age of Particles
+min_age = 50            # Min Age of Particles
+max_age = 250           # Max Age of Particles
 speed = 1               # Speed of particles
 
 min_rgb = [58,78,243,255]
@@ -59,13 +59,13 @@ def recalc_particles():
     
     for p in particles.T:
         clr = list(p[3:7])
-        dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr)
         if not (0 < p[0] < ff_width and 0 < p[1] < ff_height) or p[2] == 0:
             # if particle is not (on-screen) or age == 0
             # reset the particle 
             p[0] = np.random.random() * ff_width
             p[1] = np.random.random() * ff_height
             p[2] = np.random.randint(min_age, max_age)
+        dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr)
 
 def background(clr=bg_color[:3], opacity=255):
     global ff_width, ff_height
