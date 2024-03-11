@@ -24,7 +24,7 @@ A beautiful dynamic flowfield visualization with particle simulation. It demonst
 | **macOS** |    ❌    |
 
 **Note for macOS users:**
-> At this time, our application is not compatible with macOS. We apologize for any inconvenience this may cause. However, we are working on making our app accessible to macOS users in the future. Stay tuned for updates!
+> At this time, our application is not tested on macOS and is probably not compatible with macOS due to an incompatible library function essential to run the application. We apologize for any inconvenience this may cause. However, we are working on making our app accessible to macOS users in the future. Stay tuned for updates!
 
 
 
