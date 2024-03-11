@@ -5,5 +5,6 @@ def color_by_position(particles, ff_width, ff_height, min_rgb, max_rgb):
 
     r = np.add(min_rgb[0], np.multiply(factor_x, (max_rgb[0] - min_rgb[0])))
     g = np.add(min_rgb[1], np.multiply(factor_y, (max_rgb[1] - min_rgb[1])))
-    b = np.add(min_rgb[2], np.multiply(np.mean([factor_x, factor_y], axis=0), (max_rgb[2] - min_rgb[2])))
+    b = np.add(min_rgb[2], np.multiply(np.multiply(np.add(factor_x, factor_y), (max_rgb[2] - min_rgb[2])),0.5))
+
     return r, g, b

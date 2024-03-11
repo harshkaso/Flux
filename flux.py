@@ -6,6 +6,7 @@ from presets import color_by_position
 # CONSTANTS
 TAU = np.pi * 2
 
+
 # FLOWFIELD CONFIG
 sp_width = 250          # Side Panel Width
 ff_width  = 1000        # Flowfield Width
@@ -20,18 +21,18 @@ max_age = 250           # Max Age of Particles
 speed = 1               # Speed of particles
 
 min_rgb = [58,78,243,255]
-max_rgb = [203,218,255,255]
+max_rgb = [239,217,255,255]
 
 bg_color = [1,5,58,255] # Background Color
 
 # CONTAINERS
-particles = []          # Particle Objects
+particles = np.ndarray((8, ttl_particles))
+coords = fns.empty_coords(ttl_particles)
 
 noise = fns.Noise()
 
 def spawn_paricles():
     global ff_width, ff_height, particles, ttl_particles, min_age, max_age
-    particles = np.ndarray((8, ttl_particles))
     particles[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]  # X
     particles[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)] # Y
     particles[2,:] = [np.random.randint(min_age, max_age) for _ in range(ttl_particles)] # age
@@ -44,8 +45,7 @@ def spawn_paricles():
         p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=bg_color, color=bg_color, show=True) # Reference to drawn object
 
 def recalc_particles():
-    global noise, TAU, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
-    coords = fns.empty_coords(ttl_particles)
+    global noise, TAU, coords, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
     coords[0,:] = particles[0,:] * n_scale
     coords[1,:] = particles[1,:] * n_scale
     coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, ttl_particles)
@@ -54,7 +54,7 @@ def recalc_particles():
     sin_angles = np.sin(angles)
     particles[0,:] = np.add(particles[0,:], np.multiply(cos_angles, speed))
     particles[1,:] = np.add(particles[1,:], np.multiply(sin_angles, speed))
-    particles[2,:] = np.add(particles[2,:], np.repeat(-1, ttl_particles))
+    particles[2,:] = np.add(particles[2,:], -1)
     particles[3:6,:] = color_by_position(particles, ff_width, ff_height, min_rgb, max_rgb) # RGB
     
     for p in particles.T:
