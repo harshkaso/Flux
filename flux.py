@@ -85,9 +85,9 @@ def init_frame_buffer(sender, buffer):
         w_width = dpg.get_viewport_client_width()
         # Setup Initial Frame
         with dpg.texture_registry():
-            dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev_frame")
+            dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev-frame-texture")
         background(opacity=10)
-        dpg.add_image('prev_frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
+        dpg.add_image('prev-frame-texture',tag='prev-frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
         spawn_paricles()
         # Start the frame buffer
         dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))
@@ -95,10 +95,19 @@ def init_frame_buffer(sender, buffer):
 
 def handle_frame_buffer(sender, buffer):
     with dpg.mutex():
-        dpg.set_value('prev_frame', buffer)
+        dpg.set_value('prev-frame-texture', buffer)
         recalc_particles()
         dpg.set_frame_callback(dpg.get_frame_count()+2, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))
 
+def clear_frame(sender, buffer):
+    with dpg.mutex():
+        if dpg.is_item_shown('prev-frame'):
+            dpg.hide_item('prev-frame')
+            dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
+        else:
+            dpg.set_value('prev-frame', buffer)
+            dpg.show_item('prev-frame')
+            dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))       
 
 def setup_flux():
     # Setup flux window
@@ -132,7 +141,11 @@ def setup_flux():
             min_rgb = [int(c*255) for c in data]
         elif sender == 'max_rgb':
             max_rgb = [int(c*255) for c in data]
-
+    
+    def set_background_color(sender, data):
+        background(clr=[int(c*255) for c in data[0:3]], opacity=10)
+        dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
+            
     def handle_dropdown(sender, data, group):
         if dpg.is_item_shown(group):
             dpg.configure_item(sender, direction=dpg.mvDir_Right)
@@ -172,15 +185,19 @@ def setup_flux():
                 dpg.add_slider_float(width=sp_width/2, label='speed', min_value=0.5, default_value=speed, max_value=4, callback=set_particle_speed)
                 dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
                 dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
-                with dpg.group(indent=5, horizontal=True):
+                with dpg.group(horizontal=True):
                     dpg.add_button(tag='pc-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-color-settings')
                     dpg.add_text(default_value='Particle Color')
-                with dpg.group(indent=5, tag='particle-color-settings'):
+                with dpg.group(tag='particle-color-settings'):
                     dpg.add_color_picker(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, callback=set_min_max_rgb)
                     dpg.add_color_picker(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, callback=set_min_max_rgb)
             dpg.add_separator()
-
-            dpg.add_checkbox(label='Background', default_value=True)
+            with dpg.group(horizontal=True):
+                dpg.add_button(tag='bg-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='background-settings')
+                dpg.add_text(default_value='Background Properties')
+            with dpg.group(tag='background-settings'):
+                    dpg.add_color_picker(width=sp_width/2, label='background', tag='bg_rgb', default_value=bg_color, no_tooltip=True, callback=set_background_color)
+            dpg.add_checkbox(label='Background', default_value=True, callback=lambda: dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame)))
     
 def start_flux():
     # Start Flux
