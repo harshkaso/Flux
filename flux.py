@@ -57,7 +57,7 @@ def recalc_particles():
     particles[0,:] = np.add(particles[0,:], np.multiply(cos_angles, speed))
     particles[1,:] = np.add(particles[1,:], np.multiply(sin_angles, speed))
     particles[2,:] = np.add(particles[2,:], -1)
-    particles[3:7,:] = color_by_position(particles, ttl_particles, ff_width, ff_height, min_rgb, max_rgb, p_alpha) # RGB
+    particles[3:7,:] = color_by_position(particles, cos_angles, sin_angles, ttl_particles, ff_width, ff_height, min_rgb, max_rgb, speed, p_alpha) # RGB
     
     for p in particles.T:
         clr = list(p[3:7])
@@ -126,13 +126,10 @@ def clear_frame(sender, buffer):
             # Make sure the background is only drawn once
             if dpg.is_item_shown('w_background'):
                 dpg.hide_item('w_background')
-            dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer))       
+            dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=handle_frame_buffer)) 
 
 def setup_flux():
     # Setup flux window
-    dpg.create_context()
-    dpg.create_viewport(title='Flux', width=ff_width+sp_width, height=ff_height, resizable=False)
-    dpg.setup_dearpygui()
 
     # Callbacks
     def set_n_scale(sender, data):
@@ -178,18 +175,7 @@ def setup_flux():
         r,g,b,a = [int(c*255) for c in data]
         bg_color = [r,g,b,a]
         background(bg_color)
-        dimmer(bg_color, d_alpha)
-        # Calculate Luminance of background
-        # Needed for runntime UI themes.
-        # l = 0.2126 * r + 0.7152 * g + 0.0722 * b
-        # with dpg.theme() as flowfield_theme:
-        #     with dpg.theme_component(dpg.mvAll):
-        #         dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
-        #         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, [r,g,b,100], category=dpg.mvThemeCat_Core)
-        #         dpg.add_theme_color(dpg.mvThemeCol_Text, [255,255,255,255] if l < 140 else [0,0,0,255], category=dpg.mvThemeCat_Core)
-        #         dpg.add_theme_color(dpg.mvThemeCol_FrameBg, [int(r-(r/20)),int(g-(g/20)),int(b-(b/20)),10], category=dpg.mvThemeCat_Core)
-        # dpg.bind_item_theme('flowfield', flowfield_theme)
-        
+        dimmer(bg_color, d_alpha)        
         dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
             
     def handle_dropdown(sender, data, group):
@@ -201,20 +187,22 @@ def setup_flux():
             dpg.configure_item(group, show=True)
 
     with dpg.window(tag='flowfield', pos=(0,0)):
+        # Theme setting
         dpg.set_primary_window('flowfield', True)
         with dpg.theme() as flowfield_theme:
             with dpg.theme_component(dpg.mvAll):
                 dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
                 dpg.add_theme_color(dpg.mvThemeCol_ChildBg, bg_color, category=dpg.mvThemeCat_Core)
-    
         dpg.bind_item_theme('flowfield', flowfield_theme)
 
+        # Flux GUI
         with dpg.child_window(tag='parameters', pos=(ff_width, 0), width=sp_width, height=-1):
             with dpg.theme() as side_panel_theme:
                 with dpg.theme_component(dpg.mvAll):
                     dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 8)
             dpg.bind_item_theme('parameters', side_panel_theme)
-            # Settings for parameters
+            
+            # Flowfield Settings
             dpg.add_spacer(height=3)
             with dpg.group(horizontal=True):
                 dpg.add_button(tag='ff-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='flowfield-settings')
@@ -222,8 +210,10 @@ def setup_flux():
             with dpg.group(tag='flowfield-settings'):
                 dpg.add_slider_float(width=sp_width/2, label='noisescale', min_value=0.05, default_value=n_scale, max_value=3, callback=set_n_scale)
                 dpg.add_slider_float(width=sp_width/2, label='timescale', min_value=0, default_value=t_scale, max_value=0.1, callback=set_t_scale)
+            
             dpg.add_separator()
             
+            # Particle Settings
             with dpg.group(horizontal=True):
                 dpg.add_button(tag='pp-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-settings')
                 dpg.add_text(default_value='Particle Properties')
@@ -238,22 +228,32 @@ def setup_flux():
                 with dpg.group(tag='particle-color-settings'):
                     dpg.add_color_picker(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
                     dpg.add_color_picker(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
+            
             dpg.add_separator()
+            
+            # Background Settings
             with dpg.group(horizontal=True):
                 dpg.add_button(tag='bg-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='background-settings')
                 dpg.add_text(default_value='Background Properties')
             with dpg.group(tag='background-settings'):
                     dpg.add_color_picker(width=sp_width/2, label='background', tag='bg_rgb', default_value=bg_color, no_tooltip=True, no_alpha=True, callback=set_background_color)
                     dpg.add_slider_int(width=sp_width/2, label='dimmer alpha', default_value=d_alpha, max_value=255, callback=set_dimmer_opacity)
+            
+
+            # Bottom Padding
+            dpg.add_spacer(height=3)
 
     
 def start_flux():
     # Start Flux
+    dpg.create_context()
+    dpg.create_viewport(title='Flux', width=ff_width+sp_width, height=ff_height, resizable=False)
+    dpg.setup_dearpygui()
     setup_flux()
     dpg.show_viewport()
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
     # dpg.set_viewport_vsync(False)
-    dpg.show_metrics()
+    # dpg.show_metrics()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
