@@ -57,7 +57,7 @@ def recalc_particles():
     particles[0,:] = np.add(particles[0,:], np.multiply(cos_angles, speed))
     particles[1,:] = np.add(particles[1,:], np.multiply(sin_angles, speed))
     particles[2,:] = np.add(particles[2,:], -1)
-    particles[3:7,:] = color_by_position(particles, cos_angles, sin_angles, ttl_particles, ff_width, ff_height, min_rgb, max_rgb, speed, p_alpha) # RGB
+    particles[3:7,:] = color_by_position(particles, ttl_particles, ff_width, ff_height, min_rgb, max_rgb, p_alpha) # RGB
     
     for p in particles.T:
         clr = list(p[3:7])
