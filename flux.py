@@ -267,7 +267,7 @@ def start_flux():
     dpg.show_viewport()
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
     # dpg.set_viewport_vsync(False)
-    dpg.show_metrics()
+    # dpg.show_metrics()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
