@@ -57,16 +57,30 @@ def recalc_particles():
     particles[0,:] = np.add(particles[0,:], np.multiply(cos_angles, speed))
     particles[1,:] = np.add(particles[1,:], np.multiply(sin_angles, speed))
     particles[2,:] = np.add(particles[2,:], -1)
-    particles[3:7,:] = color_by_position(particles, cos_angles, sin_angles, ttl_particles, ff_width, ff_height, min_rgb, max_rgb, speed, p_alpha) # RGB
+
+    # Reset particles if out of bounds or expired
+    out_of_bounds = (particles[0,:] < 0) | (particles[0,:] > ff_width) | (particles[1,:] < 0) | (particles[1,:] > ff_height)
+    expired = particles[2,:] <= 0
+    reset_indices = np.logical_or(out_of_bounds, expired)
+    particles[0, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_width)
+    particles[1, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_height)
+    particles[2, reset_indices] = np.random.randint(min_age, max_age + 1, size=np.sum(reset_indices))
+
+    props = {
+        'particles': particles,
+        'cos_angles': cos_angles,
+        'sin_angles': sin_angles,
+        'ttl_particles': ttl_particles,
+        'ff_width': ff_width,
+        'ff_height': ff_height,
+        'speed': speed,
+        'min_age': min_age,
+        'max_age': max_age,
+    }
+    particles[3:7,:] = color_by_position(props, min_rgb, max_rgb, p_alpha) # RGB
     
     for p in particles.T:
         clr = list(p[3:7])
-        if not (0 < p[0] < ff_width and 0 < p[1] < ff_height) or p[2] == 0:
-            # if particle is not (on-screen) or age == 0
-            # reset the particle 
-            p[0] = np.random.random() * ff_width
-            p[1] = np.random.random() * ff_height
-            p[2] = np.random.randint(min_age, max_age)
         dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr)
 
 def background(clr):
@@ -103,8 +117,8 @@ def init_frame_buffer(sender, buffer):
             dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev-frame-texture")
         dpg.add_image('prev-frame-texture',tag='prev-frame', width=ff_width, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(ff_width/w_width, 1))
         background(bg_color)
-        spawn_paricles()
         dimmer(bg_color, d_alpha)
+        spawn_paricles()
         # Start the frame buffer
         dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
 
@@ -253,7 +267,7 @@ def start_flux():
     dpg.show_viewport()
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
     # dpg.set_viewport_vsync(False)
-    # dpg.show_metrics()
+    dpg.show_metrics()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
