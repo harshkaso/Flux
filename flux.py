@@ -1,7 +1,8 @@
 import dearpygui.dearpygui as dpg
 import pyfastnoisesimd as fns
 import numpy as np
-from presets import color_by_position
+import color_functions as cf
+
 
 # CONSTANTS
 TAU = np.pi * 2
@@ -15,21 +16,24 @@ n_scale = 0.1           # Noise Scale
 t_scale = 0.01          # Time Scale
 
 ## PARTICLE CONFIG
-ttl_particles = 1000    # Total Particles
+ttl_particles = 1600    # Total Particles
 min_age = 50            # Min Age of Particles
 max_age = 250           # Max Age of Particles
 speed = 1               # Speed of particles
 
-min_rgb = [58,78,243,255]
-max_rgb = [239,217,255,255]
-p_alpha = 50
+min_rgb = [91,109,255,255]
+max_rgb = [154,0,190,255]
 
-
+# COLOR CONFIG
 bg_color = [1,5,58,255] # Background Color
-d_alpha = 10           # Dimmer alpha
+d_alpha = 10            # Dimmer alpha
+p_alpha = 50            # Particle alpha
+clr_func = cf.clr_funcs['Angle']
+
 # CONTAINERS
 particles = np.ndarray((8, ttl_particles))
 coords = fns.empty_coords(ttl_particles)
+
 
 noise = fns.Noise()
 
@@ -68,6 +72,7 @@ def recalc_particles():
 
     props = {
         'particles': particles,
+        'angles': angles,
         'cos_angles': cos_angles,
         'sin_angles': sin_angles,
         'ttl_particles': ttl_particles,
@@ -77,7 +82,7 @@ def recalc_particles():
         'min_age': min_age,
         'max_age': max_age,
     }
-    particles[3:7,:] = color_by_position(props, min_rgb, max_rgb, p_alpha) # RGB
+    particles[3:7,:] = clr_func(props, min_rgb, max_rgb, p_alpha) # RGB
     
     for p in particles.T:
         clr = list(p[3:7])
@@ -112,6 +117,7 @@ def init_frame_buffer(sender, buffer):
         # Window dimensions
         w_height = dpg.get_viewport_client_height()
         w_width = dpg.get_viewport_client_width()
+        dpg.configure_item('parameters', width=w_width-ff_width)
         # Setup Initial Frame
         with dpg.texture_registry():
             dpg.add_raw_texture(width=w_width, height=w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba, tag="prev-frame-texture")
@@ -158,6 +164,10 @@ def setup_flux():
         global speed
         speed = data
 
+    def set_color_function(sender, data):
+        global clr_func
+        clr_func = cf.clr_funcs[data]
+
     def set_min_max_age(sender, data):
         global min_age, max_age
         if sender == 'min-age':
@@ -189,7 +199,19 @@ def setup_flux():
         r,g,b,a = [int(c*255) for c in data]
         bg_color = [r,g,b,a]
         background(bg_color)
-        dimmer(bg_color, d_alpha)        
+        dimmer(bg_color, d_alpha)
+        # Calculate Luminance of background
+        # Needed for runntime UI themes.
+        l = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        threshold = 180
+        a = 180
+        with dpg.theme() as flowfield_theme:
+            with dpg.theme_component(dpg.mvAll):
+                dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
+                dpg.add_theme_color(dpg.mvThemeCol_ChildBg, [r,g,b,a], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_Text, [255,255,255,255] if l < threshold else [0,0,0,255], category=dpg.mvThemeCat_Core)
+                dpg.add_theme_color(dpg.mvThemeCol_FrameBg, [int(r-(r/20)),int(g-(g/20)),int(b-(b/20)),100], category=dpg.mvThemeCat_Core)
+        dpg.bind_item_theme('flowfield', flowfield_theme)        
         dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
             
     def handle_dropdown(sender, data, group):
@@ -235,25 +257,24 @@ def setup_flux():
                 dpg.add_slider_float(width=sp_width/2, label='speed', min_value=0.5, default_value=speed, max_value=4, callback=set_particle_speed)
                 dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
                 dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
-                dpg.add_slider_int(width=sp_width/2, label='particle alpha', default_value=p_alpha, max_value=255, callback=set_particle_opacity)
-                with dpg.group(horizontal=True):
-                    dpg.add_button(tag='pc-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-color-settings')
-                    dpg.add_text(default_value='Particle Color')
-                with dpg.group(tag='particle-color-settings'):
-                    dpg.add_color_picker(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
-                    dpg.add_color_picker(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
-            
+      
             dpg.add_separator()
-            
-            # Background Settings
-            with dpg.group(horizontal=True):
-                dpg.add_button(tag='bg-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='background-settings')
-                dpg.add_text(default_value='Background Properties')
-            with dpg.group(tag='background-settings'):
-                    dpg.add_color_picker(width=sp_width/2, label='background', tag='bg_rgb', default_value=bg_color, no_tooltip=True, no_alpha=True, callback=set_background_color)
-                    dpg.add_slider_int(width=sp_width/2, label='dimmer alpha', default_value=d_alpha, max_value=255, callback=set_dimmer_opacity)
-            
 
+            # Color Settings
+            with dpg.group(horizontal=True):
+                dpg.add_button(tag='cl-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='color-settings')
+                dpg.add_text(default_value='Color Settings')
+            with dpg.group(tag='color-settings'):
+                dpg.add_combo(width=sp_width/2, label='Color Function', tag='color-functions', items=list(cf.clr_funcs.keys()), default_value='Age', callback=set_color_function)
+                with dpg.tab_bar(tag='color-pickers'):
+                    with dpg.tab(tag='background', label='background'):
+                        dpg.add_slider_int(width=sp_width/2, label='dimmer alpha', default_value=d_alpha, max_value=255, callback=set_dimmer_opacity)
+                        dpg.add_color_picker(width=sp_width/2, label='background', tag='bg_rgb', default_value=bg_color, no_tooltip=True, no_alpha=True, callback=set_background_color)
+                    with dpg.tab(tag='particles', label='particles'):
+                        dpg.add_slider_int(width=sp_width/2, label='particle alpha', default_value=p_alpha, max_value=255, callback=set_particle_opacity)
+                        dpg.add_color_picker(width=sp_width/2, label='min_rgb', tag='min_rgb', default_value=min_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
+                        dpg.add_color_picker(width=sp_width/2, label='max_rgb', tag='max_rgb', default_value=max_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
+            
             # Bottom Padding
             dpg.add_spacer(height=3)
 
@@ -267,10 +288,9 @@ def start_flux():
     dpg.show_viewport()
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
     # dpg.set_viewport_vsync(False)
-    dpg.show_metrics()
+    # dpg.show_metrics()
     dpg.start_dearpygui()
     dpg.destroy_context()
-
 
 if __name__ == '__main__':
     start_flux()
