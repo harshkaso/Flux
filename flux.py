@@ -41,32 +41,32 @@ noise = fns.Noise()
 
 def spawn_paricles():
     global ff_width, ff_height, particles, cc_size, min_age, max_age
-    particles[0,:] = [np.random.random() * ff_width for _ in range(cc_size)]  # X
-    particles[1,:] = [np.random.random() * ff_height for _ in range(cc_size)] # Y
-    particles[2,:] = [np.random.randint(min_age, max_age) for _ in range(cc_size)] # age
-    particles[3,:] = np.repeat(bg_color[0], cc_size) # Red
-    particles[4,:] = np.repeat(bg_color[1], cc_size) # Green
-    particles[5,:] = np.repeat(bg_color[2], cc_size) # Blue
-    particles[6,:] = np.repeat(p_alpha, cc_size) # Opacity
+    particles[0] = [np.random.random() * ff_width for _ in range(cc_size)]  # X
+    particles[1] = [np.random.random() * ff_height for _ in range(cc_size)] # Y
+    particles[2] = [np.random.randint(min_age, max_age) for _ in range(cc_size)] # age
+    particles[3] = np.repeat(bg_color[0], cc_size) # Red
+    particles[4] = np.repeat(bg_color[1], cc_size) # Green
+    particles[5] = np.repeat(bg_color[2], cc_size) # Blue
+    particles[6] = np.repeat(p_alpha, cc_size) # Opacity
     # for each coardinates draw a particle
     for p in particles.T:
-        p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=bg_color, color=bg_color, show=False) # Reference to drawn object
+        p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
 
 def recalc_particles():
     global noise, TAU, coords, particles, cc_size, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
-    coords[0,:] = particles[0,:] * n_scale
-    coords[1,:] = particles[1,:] * n_scale
-    coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, cc_size)
+    coords[0] = particles[0] * n_scale
+    coords[1] = particles[1] * n_scale
+    coords[2] = np.repeat(dpg.get_frame_count()*t_scale, cc_size)
     angles = noise.genFromCoords(coords) * TAU
     cos_angles = np.cos(angles)
     sin_angles = np.sin(angles)
-    particles[0,:] = np.add(particles[0,:], np.multiply(cos_angles, speed))
-    particles[1,:] = np.add(particles[1,:], np.multiply(sin_angles, speed))
-    particles[2,:] = np.add(particles[2,:], -1)
+    particles[0] = np.add(particles[0], np.multiply(cos_angles, speed))
+    particles[1] = np.add(particles[1], np.multiply(sin_angles, speed))
+    particles[2] = np.add(particles[2], -1)
 
     # Reset particles if out of bounds or expired
-    out_of_bounds = (particles[0,:] < 0) | (particles[0,:] > ff_width) | (particles[1,:] < 0) | (particles[1,:] > ff_height)
-    expired = particles[2,:] <= 0
+    out_of_bounds = (particles[0] < 0) | (particles[0] > ff_width) | (particles[1] < 0) | (particles[1] > ff_height)
+    expired = particles[2] <= 0
     reset_indices = np.logical_or(out_of_bounds, expired)
     particles[0, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_width)
     particles[1, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_height)
@@ -77,16 +77,16 @@ def recalc_particles():
         'angles': angles,
         'cos_angles': cos_angles,
         'sin_angles': sin_angles,
+        'max_particles': max_particles,
         'ttl_particles': ttl_particles,
         'ff_width': ff_width,
         'ff_height': ff_height,
         'speed': speed,
         'min_age': min_age,
         'max_age': max_age,
-        'prev_color': particles[3:7,:]
     }
-    particles[3:7,:] = clr_func(props, min_rgb, max_rgb, p_alpha) # RGB
-    
+    particles[3:7] = clr_func(props, min_rgb, max_rgb, p_alpha) # RGB
+
     for p in particles[:,:ttl_particles].T:
         clr = list(p[3:7])
         dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr, show=True)
