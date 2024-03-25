@@ -16,7 +16,8 @@ n_scale = 0.1           # Noise Scale
 t_scale = 0.01          # Time Scale
 
 ## PARTICLE CONFIG
-ttl_particles = 1600    # Total Particles
+max_particles = 5000   # Max number of particles
+ttl_particles = 1500    # Total Particles
 min_age = 50            # Min Age of Particles
 max_age = 250           # Max Age of Particles
 speed = 1               # Speed of particles
@@ -31,30 +32,31 @@ p_alpha = 50            # Particle alpha
 clr_func = cf.clr_funcs['Angle']
 
 # CONTAINERS
-particles = np.ndarray((8, ttl_particles))
-coords = fns.empty_coords(ttl_particles)
+coords = fns.empty_coords(max_particles)
+cc_size = coords[0].size
+particles = np.ndarray((8, cc_size))
 
 
 noise = fns.Noise()
 
 def spawn_paricles():
-    global ff_width, ff_height, particles, ttl_particles, min_age, max_age
-    particles[0,:] = [np.random.random() * ff_width for _ in range(ttl_particles)]  # X
-    particles[1,:] = [np.random.random() * ff_height for _ in range(ttl_particles)] # Y
-    particles[2,:] = [np.random.randint(min_age, max_age) for _ in range(ttl_particles)] # age
-    particles[3,:] = np.repeat(bg_color[0], ttl_particles) # Red
-    particles[4,:] = np.repeat(bg_color[1], ttl_particles) # Green
-    particles[5,:] = np.repeat(bg_color[2], ttl_particles) # Blue
-    particles[6,:] = np.repeat(p_alpha, ttl_particles) # Opacity
+    global ff_width, ff_height, particles, cc_size, min_age, max_age
+    particles[0,:] = [np.random.random() * ff_width for _ in range(cc_size)]  # X
+    particles[1,:] = [np.random.random() * ff_height for _ in range(cc_size)] # Y
+    particles[2,:] = [np.random.randint(min_age, max_age) for _ in range(cc_size)] # age
+    particles[3,:] = np.repeat(bg_color[0], cc_size) # Red
+    particles[4,:] = np.repeat(bg_color[1], cc_size) # Green
+    particles[5,:] = np.repeat(bg_color[2], cc_size) # Blue
+    particles[6,:] = np.repeat(p_alpha, cc_size) # Opacity
     # for each coardinates draw a particle
     for p in particles.T:
-        p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=bg_color, color=bg_color, show=True) # Reference to drawn object
+        p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=bg_color, color=bg_color, show=False) # Reference to drawn object
 
 def recalc_particles():
-    global noise, TAU, coords, particles, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
+    global noise, TAU, coords, particles, cc_size, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
     coords[0,:] = particles[0,:] * n_scale
     coords[1,:] = particles[1,:] * n_scale
-    coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, ttl_particles)
+    coords[2,:] = np.repeat(dpg.get_frame_count()*t_scale, cc_size)
     angles = noise.genFromCoords(coords) * TAU
     cos_angles = np.cos(angles)
     sin_angles = np.sin(angles)
@@ -81,12 +83,13 @@ def recalc_particles():
         'speed': speed,
         'min_age': min_age,
         'max_age': max_age,
+        'prev_color': particles[3:7,:]
     }
     particles[3:7,:] = clr_func(props, min_rgb, max_rgb, p_alpha) # RGB
     
-    for p in particles.T:
+    for p in particles[:,:ttl_particles].T:
         clr = list(p[3:7])
-        dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr)
+        dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr, show=True)
 
 def background(clr):
     global ff_width, ff_height
@@ -159,6 +162,17 @@ def setup_flux():
     def set_t_scale(sender, data):
         global t_scale
         t_scale = data
+
+    def set_ttl_particles(sender, data):
+        global ttl_particles, particles
+        if data > ttl_particles:
+            for p in particles[7,ttl_particles:min(data+1, max_particles)]:
+                dpg.configure_item(int(p), show=True)
+        else:
+            for p in particles[7, data:ttl_particles]:
+                dpg.configure_item(int(p), show=False)
+            pass
+        ttl_particles = data
 
     def set_particle_speed(sender, data):
         global speed
@@ -254,6 +268,7 @@ def setup_flux():
                 dpg.add_button(tag='pp-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='particle-settings')
                 dpg.add_text(default_value='Particle Properties')
             with dpg.group(tag='particle-settings'):
+                dpg.add_slider_int(width=sp_width/2, label='particles', tag='total-particles', min_value=0, default_value=ttl_particles, max_value=max_particles, callback=set_ttl_particles)
                 dpg.add_slider_float(width=sp_width/2, label='speed', min_value=0.5, default_value=speed, max_value=4, callback=set_particle_speed)
                 dpg.add_slider_int(width=sp_width/2, label='min age', tag='min-age', min_value=min_age, default_value=min_age, max_value=100, callback=set_min_max_age)
                 dpg.add_slider_int(width=sp_width/2, label='max age', tag='max-age', min_value=101, default_value=max_age, max_value=max_age, callback=set_min_max_age)
@@ -289,6 +304,7 @@ def start_flux():
     dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
     # dpg.set_viewport_vsync(False)
     # dpg.show_metrics()
+    # dpg.show_style_editor()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
