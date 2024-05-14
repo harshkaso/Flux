@@ -1,7 +1,9 @@
 import dearpygui.dearpygui as dpg
-import pyfastnoisesimd as fns
+import pyfastnoisesimd as fns 
 import numpy as np
 import color_functions as cf
+import flowfield_functions as fff
+import config as cfg
 
 
 # CONSTANTS
@@ -9,6 +11,7 @@ TAU = np.pi * 2
 
 
 # FLOWFIELD CONFIG
+ff_func = fff.get_ff_func('Default')
 sp_width = 300          # Side Panel Width
 ff_width  = 1000        # Flowfield Width
 ff_height = 750         # Flowfield Height
@@ -37,6 +40,8 @@ cc_size = coords[0].size
 particles = np.ndarray((8, cc_size))
 
 
+
+
 noise = fns.Noise()
 
 def spawn_paricles():
@@ -57,7 +62,7 @@ def recalc_particles():
     coords[0] = particles[0] * n_scale
     coords[1] = particles[1] * n_scale
     coords[2] = np.repeat(dpg.get_frame_count()*t_scale, cc_size)
-    angles = noise.genFromCoords(coords) * TAU
+    angles = ff_func(coords)
     cos_angles = np.cos(angles)
     sin_angles = np.sin(angles)
     particles[0] = np.add(particles[0], np.multiply(cos_angles, speed))
@@ -72,7 +77,7 @@ def recalc_particles():
     particles[1, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_height)
     particles[2, reset_indices] = np.random.randint(min_age, max_age + 1, size=np.sum(reset_indices))
 
-    props = {
+    args = {
         'particles': particles,
         'angles': angles,
         'cos_angles': cos_angles,
@@ -85,7 +90,7 @@ def recalc_particles():
         'min_age': min_age,
         'max_age': max_age,
     }
-    particles[3:7] = clr_func(props, min_rgb, max_rgb, p_alpha) # RGB
+    particles[3:7] = clr_func(min_rgb, max_rgb, p_alpha, args) # RGB
 
     for p in particles[:,:ttl_particles].T:
         clr = list(p[3:7])
@@ -155,6 +160,14 @@ def setup_flux():
     # Setup flux window
 
     # Callbacks
+    def set_flowfield_function(sender, data):
+        global ff_func
+        dpg.delete_item(cfg.ff_func_settings, children_only=True)
+        ff_func = fff.get_ff_func(data)
+
+        # TODO: Find a way to dynamically display inputs for the selected functions
+        # find what variables are needed by the function
+        
     def set_n_scale(sender, data):
         global n_scale
         n_scale = data
@@ -171,7 +184,6 @@ def setup_flux():
         else:
             for p in particles[7, data:ttl_particles]:
                 dpg.configure_item(int(p), show=False)
-            pass
         ttl_particles = data
 
     def set_particle_speed(sender, data):
@@ -258,8 +270,11 @@ def setup_flux():
                 dpg.add_button(tag='ff-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='flowfield-settings')
                 dpg.add_text(default_value='Flowfield Properties')
             with dpg.group(tag='flowfield-settings'):
+                dpg.add_combo(width=sp_width/2, label='FlowField Function', tag='flowfield-functions', items=list(fff.ff_funcs.keys()), default_value='Default', callback=set_flowfield_function)
                 dpg.add_slider_float(width=sp_width/2, label='noisescale', min_value=0.05, default_value=n_scale, max_value=3, callback=set_n_scale)
                 dpg.add_slider_float(width=sp_width/2, label='timescale', min_value=0, default_value=t_scale, max_value=0.1, callback=set_t_scale)
+            with dpg.group(tag=cfg.ff_func_settings):
+                pass
             
             dpg.add_separator()
             
@@ -280,7 +295,7 @@ def setup_flux():
                 dpg.add_button(tag='cl-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='color-settings')
                 dpg.add_text(default_value='Color Settings')
             with dpg.group(tag='color-settings'):
-                dpg.add_combo(width=sp_width/2, label='Color Function', tag='color-functions', items=list(cf.clr_funcs.keys()), default_value='Age', callback=set_color_function)
+                dpg.add_combo(width=sp_width/2, label='Color Function', tag='color-functions', items=list(cf.clr_funcs.keys()), default_value='Angle', callback=set_color_function)
                 with dpg.tab_bar(tag='color-pickers'):
                     with dpg.tab(tag='background', label='background'):
                         dpg.add_slider_int(width=sp_width/2, label='dimmer alpha', default_value=d_alpha, max_value=255, callback=set_dimmer_opacity)
@@ -309,4 +324,4 @@ def start_flux():
     dpg.destroy_context()
 
 if __name__ == '__main__':
-    start_flux()
+    pass
