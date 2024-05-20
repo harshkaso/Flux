@@ -4,10 +4,25 @@ from types import SimpleNamespace
 
 
 def default_noise():
-    args = SimpleNamespace()
-    fns_noise = fns.Noise()
-    TAU = np.pi * 2
-    def noise(coords):
-        nonlocal fns_noise, TAU, args
-        return fns_noise.genFromCoords(coords) * TAU
-    return args, noise
+	fns_noise = fns.Noise()
+	TAU = np.pi * 2
+
+	args = SimpleNamespace(
+		noise_scale = SimpleNamespace(
+			val = 0.5,
+			min_val = 0.1,
+			max_val = 3
+		),
+		time_scale = SimpleNamespace(
+			val = 0.01,
+			min_val = 0,
+			max_val = 0.1
+		)
+	)
+	def noise(coords):
+		nonlocal fns_noise, TAU, args
+		coords[0] *= args.noise_scale.val
+		coords[1] *= args.noise_scale.val
+		coords[2] *= args.time_scale.val
+		return fns_noise.genFromCoords(coords) * TAU
+	return args, noise

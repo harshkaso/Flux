@@ -11,7 +11,7 @@ TAU = np.pi * 2
 
 
 # FLOWFIELD CONFIG
-ff_func = fff.get_ff_func('Default')
+# ff_func = fff.get_ff_func('Default')
 sp_width = 300          # Side Panel Width
 ff_width  = 1000        # Flowfield Width
 ff_height = 750         # Flowfield Height
@@ -59,9 +59,9 @@ def spawn_paricles():
 
 def recalc_particles():
     global noise, TAU, coords, particles, cc_size, ttl_particles, ff_width, ff_height,  min_age, max_age, speed
-    coords[0] = particles[0] * n_scale
-    coords[1] = particles[1] * n_scale
-    coords[2] = np.repeat(dpg.get_frame_count()*t_scale, cc_size)
+    coords[0] = particles[0]
+    coords[1] = particles[1]
+    coords[2] = np.repeat(dpg.get_frame_count(), cc_size)
     angles = ff_func(coords)
     cos_angles = np.cos(angles)
     sin_angles = np.sin(angles)
@@ -158,6 +158,7 @@ def clear_frame(sender, buffer):
 
 def setup_flux():
     # Setup flux window
+    global ff_func
 
     # Callbacks
     def set_flowfield_function(sender, data):
@@ -271,10 +272,11 @@ def setup_flux():
                 dpg.add_text(default_value='Flowfield Properties')
             with dpg.group(tag='flowfield-settings'):
                 dpg.add_combo(width=sp_width/2, label='FlowField Function', tag='flowfield-functions', items=list(fff.ff_funcs.keys()), default_value='Default', callback=set_flowfield_function)
-                dpg.add_slider_float(width=sp_width/2, label='noisescale', min_value=0.05, default_value=n_scale, max_value=3, callback=set_n_scale)
-                dpg.add_slider_float(width=sp_width/2, label='timescale', min_value=0, default_value=t_scale, max_value=0.1, callback=set_t_scale)
+                # dpg.add_slider_float(width=sp_width/2, label='noisescale', min_value=0, default_value=n_scale, max_value=3, callback=set_n_scale)
+                # dpg.add_slider_float(width=sp_width/2, label='timescale', min_value=0, default_value=t_scale, max_value=0.1, callback=set_t_scale)
             with dpg.group(tag=cfg.ff_func_settings):
-                pass
+                ff_func = fff.get_ff_func('Default')
+
             
             dpg.add_separator()
             
