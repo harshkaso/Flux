@@ -13,12 +13,12 @@ def chladni_like():
     ),
     
     a = SimpleNamespace(
-      val = 20,
+      val = 15,
       min_val = 1,
       max_val = 20
     ),
     b = SimpleNamespace(
-      val = 1,
+      val = 10,
       min_val = 1,
       max_val = 20
     ),
@@ -38,7 +38,7 @@ def chladni_like():
     nonlocal args, TAU
     x, y, z = coords/(args.scale.val*1000)
     angles = np.cos(TAU*args.m.val*x)*np.cos(TAU*args.n.val*y)*args.a.val \
-      - 13*np.cos(TAU*args.n.val*x)*np.cos(TAU*args.m.val*y)*args.b.val
+      - np.cos(TAU*args.n.val*x)*np.cos(TAU*args.m.val*y)*args.b.val
     return np.cos(angles), np.sin(angles)
   return args, noise
 
