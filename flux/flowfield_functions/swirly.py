@@ -17,7 +17,8 @@ def swirly():
   )
   def noise(coords):
     nonlocal args
-    return (np.cos(coords[0]*args.scale.val) + np.sin(coords[1]*args.scale.val)) * args.curviness.val
+    angles = (np.cos(coords[0]*args.scale.val) + np.sin(coords[1]*args.scale.val)) * args.curviness.val
+    return np.cos(angles), np.sin(angles)
 
   return args, noise
 

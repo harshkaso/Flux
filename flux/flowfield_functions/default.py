@@ -24,5 +24,6 @@ def default_noise():
 		coords[0] *= args.noise_scale.val
 		coords[1] *= args.noise_scale.val
 		coords[2] *= args.time_scale.val
-		return fns_noise.genFromCoords(coords) * TAU
+		angles = fns_noise.genFromCoords(coords) * TAU
+		return np.cos(angles), np.sin(angles)
 	return args, noise

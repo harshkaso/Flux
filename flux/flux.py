@@ -62,11 +62,9 @@ def recalc_particles():
     coords[0] = particles[0]
     coords[1] = particles[1]
     coords[2] = np.repeat(dpg.get_frame_count(), cc_size)
-    angles = ff_func(coords)
-    cos_angles = np.cos(angles)
-    sin_angles = np.sin(angles)
-    particles[0] = np.add(particles[0], np.multiply(cos_angles, speed))
-    particles[1] = np.add(particles[1], np.multiply(sin_angles, speed))
+    dx, dy = ff_func(coords)
+    particles[0] = np.add(particles[0], np.multiply(dx, speed))
+    particles[1] = np.add(particles[1], np.multiply(dy, speed))
     particles[2] = np.add(particles[2], -1)
 
     # Reset particles if out of bounds or expired
@@ -79,9 +77,8 @@ def recalc_particles():
 
     args = {
         'particles': particles,
-        'angles': angles,
-        'cos_angles': cos_angles,
-        'sin_angles': sin_angles,
+        'dx': dx,
+        'dy': dy,
         'max_particles': max_particles,
         'ttl_particles': ttl_particles,
         'ff_width': ff_width,

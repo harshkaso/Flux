@@ -1,6 +1,6 @@
 from .default import default_noise
 from .swirly import swirly
-from .lorenz_attractor import lorenz_attractor
+from .chladni_like import chladni_like
 import dearpygui.dearpygui as dpg
 from types import SimpleNamespace
 from config import ff_func_settings, sp_width
@@ -8,7 +8,7 @@ from config import ff_func_settings, sp_width
 ff_funcs = {
     'Default': default_noise,
     'Swirly': swirly,
-    'Lorenz Attractor': lorenz_attractor
+    'Quattro': chladni_like
 }
 
 def setup_args(args: SimpleNamespace):
