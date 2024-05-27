@@ -1,8 +1,10 @@
 import numpy as np
 from types import SimpleNamespace
 
+def get_flowfield_function_name():
+  'Swirly'
 
-def swirly():
+def flowfield():
   args = SimpleNamespace(
     curviness = SimpleNamespace(
       val = 3.5,

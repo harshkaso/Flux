@@ -1,22 +1,27 @@
-from .default import default_noise
-from .swirly import swirly
-from .chladni_like import chladni_like
+import os
+import importlib
 import dearpygui.dearpygui as dpg
 from types import SimpleNamespace
 from config import ff_func_settings, sp_width
 
-ff_funcs = {
-    'Default': default_noise,
-    'Swirly': swirly,
-    'Quattro': chladni_like
-}
+__globals = globals()
+__ff_funcs = {}
+for file in os.listdir(os.path.dirname(__file__)):
+    mod_name = file[:-3]   # strip .py at the end
+    if not mod_name.startswith('__'): # Avoid importing __init__.py
+        __globals[mod_name] = importlib.import_module('.' + mod_name, package=__name__)
+        __ff_funcs[__globals[mod_name].get_flowfield_function_name()] = __globals[mod_name].flowfield 
 
-def setup_args(args: SimpleNamespace):
+
+def _setup_args(args: SimpleNamespace):
     for arg in list(args.__dict__):
         prop = getattr(args, arg)
         dpg.add_slider_float(width=sp_width/2, label=arg, parent=ff_func_settings, default_value=prop.val, max_value=prop.max_val, min_value=prop.min_val, user_data=prop, callback=lambda sender, data, property: setattr(property, 'val', data))
 
-def get_ff_func(func):
-    args, noise = ff_funcs.get(func)()
-    setup_args(args)        
+def get_flowfield_function(func):
+    args, noise = __ff_funcs.get(func)()
+    _setup_args(args)        
     return noise
+
+def get_flowfield_function_names():
+    return list(__ff_funcs.keys())

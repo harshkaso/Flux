@@ -1,15 +1,16 @@
 import numpy as np
 from types import SimpleNamespace
 
+def get_flowfield_function_name():
+  return 'Quattro'
 
-def chladni_like():
-  TAU = np.pi * 2
+def flowfield():
   
   args = SimpleNamespace(
     scale = SimpleNamespace(
-      val = 1.5,
-      min_val = 0.1,
-      max_val = 5
+      val = 1500,
+      min_val = 500,
+      max_val = 5000
     ),
     
     a = SimpleNamespace(
@@ -34,10 +35,11 @@ def chladni_like():
     )
   )
 
+  TAU = np.pi * 2
   def noise(coords):
     nonlocal args, TAU
-    x, y, z = coords/(args.scale.val*1000)
-    angles = np.cos(TAU*args.m.val*x)*np.cos(TAU*args.n.val*y)*args.a.val \
+    x, y, z = coords/(args.scale.val)
+    angles = np.cos(z*TAU*args.scale.val)-np.cos(TAU*args.m.val*x)*np.cos(TAU*args.n.val*y)*args.a.val \
       - np.cos(TAU*args.n.val*x)*np.cos(TAU*args.m.val*y)*args.b.val
     return np.cos(angles), np.sin(angles)
   return args, noise

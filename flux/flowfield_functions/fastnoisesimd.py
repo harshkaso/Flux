@@ -2,8 +2,10 @@ import pyfastnoisesimd as fns
 import numpy as np
 from types import SimpleNamespace
 
+def get_flowfield_function_name():
+	return 'FastNoiseSIMD'
 
-def default_noise():
+def flowfield():
 	fns_noise = fns.Noise()
 	TAU = np.pi * 2
 

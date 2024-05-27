@@ -1,7 +1,35 @@
-
+import pyfastnoisesimd as fns 
+import numpy as np
 
 # UI TAGS/IDS
 ff_func_settings = 'ff-func-settings'
 
 
-sp_width = 300          # Side Panel Width
+ff_func = ''                    # Flowfield Function
+default_fff = 'FastNoiseSIMD'   # Default Flowfield Function Name
+
+clr_func = ''               # Color Function
+default_cf = 'Angle'        # Default Color Function Name
+
+
+sp_width = 300              # Side Panel Width
+ff_width  = 1000            # Flowfield Width
+ff_height = 750             # Flowfield Height
+
+max_particles = 5000        # Max number of particles
+ttl_particles = 1500        # Total Particles
+min_age = 50                # Min Age of Particles
+max_age = 250               # Max Age of Particles
+speed = 1                   # Speed of particles
+
+
+bg_color = [1,5,58,255]     # Background Color
+min_rgb = [91,109,255,255]  # Particle Color - Min
+max_rgb = [154,0,190,255]   # Particle Color - Max
+d_alpha = 10                # Dimmer alpha
+p_alpha = 50                # Particle alpha
+
+# CONTAINERS
+coords = fns.empty_coords(max_particles)
+cc_size = coords[0].size
+particles = np.ndarray((8, cc_size))
