@@ -2,7 +2,7 @@ import numpy as np
 from types import SimpleNamespace
 
 def get_flowfield_function_name():
-  'Swirly'
+  return  'Swirly'
 
 def flowfield():
   args = SimpleNamespace(
