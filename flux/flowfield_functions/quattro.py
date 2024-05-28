@@ -39,7 +39,7 @@ def flowfield():
   def noise(coords):
     nonlocal args, TAU
     x, y, z = coords/(args.scale.val)
-    angles = np.cos(z*TAU*args.scale.val)-np.cos(TAU*args.m.val*x)*np.cos(TAU*args.n.val*y)*args.a.val \
+    angles = np.cos(TAU*args.m.val*x)*np.cos(TAU*args.n.val*y)*args.a.val \
       - np.cos(TAU*args.n.val*x)*np.cos(TAU*args.m.val*y)*args.b.val
     return np.cos(angles), np.sin(angles)
   return args, noise
