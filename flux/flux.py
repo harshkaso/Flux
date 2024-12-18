@@ -12,9 +12,10 @@ def spawn_paricles():
   cfg.particles[4] = np.repeat(cfg.bg_color[1], cfg.cc_size) # Green
   cfg.particles[5] = np.repeat(cfg.bg_color[2], cfg.cc_size) # Blue
   cfg.particles[6] = np.repeat(cfg.p_alpha, cfg.cc_size) # Opacity
+  cfg.particles[7] = np.repeat(cfg.radius, cfg.cc_size) # Radius
   # for each coordinates draw a particle
   for p in cfg.particles.T:
-    p[7] = dpg.draw_circle(center=(p[0], p[1]), radius=1, parent='flowfield', fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
+    p[8] = dpg.draw_circle(center=(p[0], p[1]), radius=cfg.radius, parent='flowfield', fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
 
 def recalc_particles():
   cfg.coords[0] = cfg.particles[0]
@@ -51,7 +52,7 @@ def recalc_particles():
 
   for p in cfg.particles[:,:cfg.ttl_particles].T:
     clr = list(p[3:7])
-    dpg.configure_item(int(p[7]), center=(p[0], p[1]), fill=clr, color=clr, show=True)
+    dpg.configure_item(int(p[8]), radius=p[7], center=(p[0], p[1]), fill=clr, color=clr, show=True)
 
 def background(clr):
   with dpg.mutex():
@@ -126,15 +127,24 @@ def setup_flux():
 
   def set_ttl_particles(sender, data):
     if data > cfg.ttl_particles:
-      for p in cfg.particles[7,cfg.ttl_particles:min(data+1, cfg.max_particles)]:
+      for p in cfg.particles[8,cfg.ttl_particles:min(data+1, cfg.max_particles)]:
         dpg.configure_item(int(p), show=True)
     else:
-      for p in cfg.particles[7, data:cfg.ttl_particles]:
+      for p in cfg.particles[8, data:cfg.ttl_particles]:
         dpg.configure_item(int(p), show=False)
     cfg.ttl_particles = data
 
   def set_particle_speed(sender, data):
     cfg.speed = data
+
+  def set_particle_radius(sender, data):
+    cfg.radius = data
+    cfg.particles[7] = np.repeat(cfg.radius, cfg.cc_size) if not cfg.random_radius else np.random.rand(cfg.cc_size)*cfg.radius
+  
+  def set_random_radius(sender, data):
+    cfg.random_radius = data
+    cfg.particles[7] = np.repeat(cfg.radius, cfg.cc_size) if not cfg.random_radius else np.random.rand(cfg.cc_size)*cfg.radius
+    
 
   def set_color_function(sender, data):
     cfg.clr_func = cf.get_color_function(data)
@@ -226,6 +236,8 @@ def setup_flux():
         dpg.add_slider_float(width=cfg.sp_width/2, label='speed', min_value=0.5, default_value=cfg.speed, max_value=4, callback=set_particle_speed)
         dpg.add_slider_int(width=cfg.sp_width/2, label='min age', tag='min-age', min_value=cfg.min_age, default_value=cfg.min_age, max_value=100, callback=set_min_max_age)
         dpg.add_slider_int(width=cfg.sp_width/2, label='max age', tag='max-age', min_value=101, default_value=cfg.max_age, max_value=cfg.max_age, callback=set_min_max_age)
+        dpg.add_checkbox(label='random radius', tag='random-radius', default_value=cfg.random_radius, callback=set_random_radius)
+        dpg.add_slider_float(width=cfg.sp_width/2, label='radius', tag='radius', min_value=0, default_value=cfg.radius, max_value=cfg.max_radius, callback=set_particle_radius)
     
       dpg.add_separator()
 

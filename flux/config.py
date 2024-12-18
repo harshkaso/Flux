@@ -26,6 +26,9 @@ ttl_particles = 1500        # Total Particles
 min_age = 50                # Min Age of Particles
 max_age = 250               # Max Age of Particles
 speed = 1                   # Speed of particles
+radius = 1                  # Radius of particles
+max_radius = 20             # Max radius of particles
+random_radius = False       # Random Radius
 
 
 bg_color = [1,5,58,255]     # Background Color
@@ -37,4 +40,8 @@ p_alpha = 25                # Particle alpha
 # CONTAINERS
 coords = fns.empty_coords(max_particles)
 cc_size = coords[0].size
-particles = np.ndarray((8, cc_size))
+particles = np.ndarray((9, cc_size))
+
+# TYPES
+TYPE_SLIDER_INT = 'INT'
+TYPE_SLIDER_FLOAT = 'FLOAT'
