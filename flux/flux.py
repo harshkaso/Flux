@@ -51,8 +51,7 @@ def recalc_particles():
   cfg.particles[3:7] = cfg.clr_func(cfg.min_rgb, cfg.max_rgb, cfg.p_alpha, args) # RGB
 
   for p in cfg.particles[:,:cfg.ttl_particles].T:
-    clr = list(p[3:7])
-    dpg.configure_item(int(p[8]), radius=p[7], center=(p[0], p[1]), fill=clr, color=clr, show=True)
+    dpg.configure_item(int(p[8]), radius=p[7], center=(p[0], p[1]), fill=list(p[3:7]), color=cfg.border_rgb if cfg.border else list(p[3:7]), show=True)
 
 def background(clr):
   with dpg.mutex():
@@ -163,6 +162,12 @@ def setup_flux():
 
   def set_particle_opacity(sender, data):
     cfg.p_alpha = data
+
+  def set_border(sender, data):
+    cfg.border = data
+
+  def set_border_rgb(sender, data):
+    cfg.border_rgb = [int(c*255) for c in data]
   
   def set_dimmer_opacity(semder, data):
     cfg.d_alpha = data
@@ -255,6 +260,8 @@ def setup_flux():
             dpg.add_slider_int(width=cfg.sp_width/2, label='particle alpha', default_value=cfg.p_alpha, max_value=255, callback=set_particle_opacity)
             dpg.add_color_picker(width=cfg.sp_width/2, label='min_rgb', tag='min_rgb', default_value=cfg.min_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
             dpg.add_color_picker(width=cfg.sp_width/2, label='max_rgb', tag='max_rgb', default_value=cfg.max_rgb, no_tooltip=True, no_alpha=True, callback=set_min_max_rgb)
+            dpg.add_checkbox(label='Border', tag='border', default_value=cfg.border, callback=set_border)
+            dpg.add_color_picker(width=cfg.sp_width/2, label='border_rgb', tag='border_rgb', default_value=cfg.border_rgb, no_tooltip=True, callback=set_border_rgb)
       # Bottom Padding
       dpg.add_spacer(height=3)
 
@@ -275,7 +282,7 @@ def start_flux():
   dpg.set_viewport_resize_callback(callback=handle_viewport_resize)
   # dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
   # dpg.set_viewport_vsync(False)
-  # dpg.show_metrics()
+  dpg.show_metrics()
   # dpg.show_style_editor()
   dpg.start_dearpygui()
   dpg.destroy_context()

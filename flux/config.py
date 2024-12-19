@@ -36,6 +36,8 @@ min_rgb = [91,109,255,255]  # Particle Color - Min
 max_rgb = [154,0,190,255]   # Particle Color - Max
 d_alpha = 10                # Dimmer alpha
 p_alpha = 25                # Particle alpha
+border = False              # Border of particles
+border_rgb = [1,5,58,255]   # Border Color
 
 # CONTAINERS
 coords = fns.empty_coords(max_particles)
