@@ -1,20 +1,19 @@
 ﻿<h1 align='center'>Flux</h1>
 A beautiful dynamic flowfield visualization with particle simulation. It demonstrates the movement of particles within a vector field, offering an engaging visualization of the underlying noisemaps.
 <p align='center'>
-    <img src='assets\flux4-gif.gif'>
+    <img src='assets\screenshots\Flux_FranksLabText_light.png'>
 </p>
 <p align='center'>
-    <img src='assets\flux1.png'>
+    <img src='assets\screenshots\SeaAnemone_FNS.png'>
 </p>
 <p align='center'>
-    <img src='assets\flux2.png'>
+    <img src='assets\screenshots\Greens_Swirly.png'>
 </p>
 <p align='center'>
-    <img src='assets\flux3.png'>
+    <img src='assets\screenshots\Bubbles_Quattro.png'>
 </p>
-<p align='center'>
-    <img src='assets\flux5.png'>
-</p>
+
+#### For additional screenshots, visit the full folder: [Screenshots Folder](assets/screenshots)
 
 ## System Support
 |     OS    | Supported |
