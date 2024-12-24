@@ -8,7 +8,7 @@ ff_func_settings = 'ff-func-settings'
 
 
 ff_func = ''                # Flowfield Function
-default_fff = 'Quattro'     # Default Flowfield Function Name
+default_fff = 'Franks Lab Text'     # Default Flowfield Function Name
 
 clr_func = ''               # Color Function
 default_cf = 'Angle'        # Default Color Function Name
@@ -40,10 +40,20 @@ border = False              # Border of particles
 border_rgb = [1,5,58,255]   # Border Color
 
 # CONTAINERS
-coords = fns.empty_coords(max_particles)
-cc_size = coords[0].size
-particles = np.ndarray((9, cc_size))
+particles = np.ndarray((9, max_particles))
 
 # TYPES
-TYPE_SLIDER_INT = 'INT'
-TYPE_SLIDER_FLOAT = 'FLOAT'
+TYPE_SLIDER_INT = 'SLIDER_INT'
+TYPE_SLIDER_FLOAT = 'SLIDER_FLOAT'
+TYPE_INPUT_TEXT = 'INPUT_TEXT'
+
+# DEFAULT FUNCTION DEFINITIONS
+def default_reset_particles(reset_indices):
+    global particles, ff_width, ff_height, min_age, max_age
+    particles[0, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_width)
+    particles[1, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_height)
+    particles[2, reset_indices] = np.random.randint(min_age, max_age + 1, size=np.sum(reset_indices))
+
+
+# DEFAULT FUNCTION REFERENCES
+reset_particles = default_reset_particles

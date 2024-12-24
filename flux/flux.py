@@ -5,24 +5,21 @@ import flowfield_functions as fff
 import config as cfg
 
 def spawn_paricles():
-  cfg.particles[0] = [np.random.random() * cfg.ff_width for _ in range(cfg.cc_size)]  # X
-  cfg.particles[1] = [np.random.random() * cfg.ff_height for _ in range(cfg.cc_size)] # Y
-  cfg.particles[2] = [np.random.randint(cfg.min_age, cfg.max_age) for _ in range(cfg.cc_size)] # age
-  cfg.particles[3] = np.repeat(cfg.bg_color[0], cfg.cc_size) # Red
-  cfg.particles[4] = np.repeat(cfg.bg_color[1], cfg.cc_size) # Green
-  cfg.particles[5] = np.repeat(cfg.bg_color[2], cfg.cc_size) # Blue
-  cfg.particles[6] = np.repeat(cfg.p_alpha, cfg.cc_size) # Opacity
-  cfg.particles[7] = np.repeat(cfg.radius, cfg.cc_size) # Radius
+  cfg.particles[0] = [np.random.random() * cfg.ff_width for _ in range(cfg.max_particles)]  # X
+  cfg.particles[1] = [np.random.random() * cfg.ff_height for _ in range(cfg.max_particles)] # Y
+  cfg.particles[2] = [np.random.randint(cfg.min_age, cfg.max_age) for _ in range(cfg.max_particles)] # age
+  cfg.particles[3] = np.repeat(cfg.bg_color[0], cfg.max_particles) # Red
+  cfg.particles[4] = np.repeat(cfg.bg_color[1], cfg.max_particles) # Green
+  cfg.particles[5] = np.repeat(cfg.bg_color[2], cfg.max_particles) # Blue
+  cfg.particles[6] = np.repeat(cfg.p_alpha, cfg.max_particles) # Opacity
+  cfg.particles[7] = np.repeat(cfg.radius, cfg.max_particles) # Radius
   # for each coordinates draw a particle
   for p in cfg.particles.T:
     p[8] = dpg.draw_circle(center=(p[0], p[1]), radius=cfg.radius, parent='flowfield', fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
 
 def recalc_particles():
-  cfg.coords[0] = cfg.particles[0]
-  cfg.coords[1] = cfg.particles[1]
-  cfg.coords[2] = np.repeat(dpg.get_frame_count(), cfg.cc_size)
-
-  dx, dy = cfg.ff_func(cfg.coords)
+  
+  dx, dy = cfg.ff_func(cfg.particles, dpg.get_frame_count())
   
   cfg.particles[0] = np.add(cfg.particles[0], np.multiply(dx, cfg.speed))
   cfg.particles[1] = np.add(cfg.particles[1], np.multiply(dy, cfg.speed))
@@ -32,9 +29,7 @@ def recalc_particles():
   out_of_bounds = (cfg.particles[0] < 0) | (cfg.particles[0] > cfg.ff_width) | (cfg.particles[1] < 0) | (cfg.particles[1] > cfg.ff_height)
   expired = cfg.particles[2] <= 0
   reset_indices = np.logical_or(out_of_bounds, expired)
-  cfg.particles[0, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), cfg.ff_width)
-  cfg.particles[1, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), cfg.ff_height)
-  cfg.particles[2, reset_indices] = np.random.randint(cfg.min_age, cfg.max_age + 1, size=np.sum(reset_indices))
+  cfg.reset_particles(reset_indices)
 
   args = {
     'particles': cfg.particles,
@@ -138,11 +133,11 @@ def setup_flux():
 
   def set_particle_radius(sender, data):
     cfg.radius = data
-    cfg.particles[7] = np.repeat(cfg.radius, cfg.cc_size) if not cfg.random_radius else np.random.rand(cfg.cc_size)*cfg.radius
+    cfg.particles[7] = np.repeat(cfg.radius, cfg.max_particles) if not cfg.random_radius else np.random.rand(cfg.max_particles)*cfg.radius
   
   def set_random_radius(sender, data):
     cfg.random_radius = data
-    cfg.particles[7] = np.repeat(cfg.radius, cfg.cc_size) if not cfg.random_radius else np.random.rand(cfg.cc_size)*cfg.radius
+    cfg.particles[7] = np.repeat(cfg.radius, cfg.max_particles) if not cfg.random_radius else np.random.rand(cfg.max_particles)*cfg.radius
     
 
   def set_color_function(sender, data):
@@ -282,7 +277,7 @@ def start_flux():
   dpg.set_viewport_resize_callback(callback=handle_viewport_resize)
   # dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
   # dpg.set_viewport_vsync(False)
-  dpg.show_metrics()
+  # dpg.show_metrics()
   # dpg.show_style_editor()
   dpg.start_dearpygui()
   dpg.destroy_context()

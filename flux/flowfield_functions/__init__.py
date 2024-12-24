@@ -21,6 +21,8 @@ def _setup_args(args: SimpleNamespace):
         # dpg.add_slider_float(width=sp_width/2, label=arg, parent=ff_func_settings, default_value=prop.val, max_value=prop.max_val, min_value=prop.min_val, user_data=prop, callback= print(getattr(arg, callback)) if hasattr(arg, 'callback') else lambda sender, data, property: setattr(property, 'val', data))
         if hasattr(prop, 'type') and prop.type == cfg.TYPE_SLIDER_INT:
             dpg.add_slider_int(width=sp_width/2, label=arg, parent=ff_func_settings, default_value=prop.val, max_value=prop.max_val, min_value=prop.min_val, user_data=prop, callback= lambda sender, data, property: getattr(property, 'callback')(sender, data, property) if hasattr(property, 'callback') else setattr(property, 'val', data))
+        elif hasattr(prop, 'type') and prop.type == cfg.TYPE_INPUT_TEXT:
+            dpg.add_input_text(width=sp_width/2, label=arg, parent=ff_func_settings, default_value=prop.val, user_data=prop, callback= lambda sender, data, property: getattr(property, 'callback')(sender, data, property) if hasattr(property, 'callback') else setattr(property, 'val', data))
         else:
             dpg.add_slider_float(width=sp_width/2, label=arg, parent=ff_func_settings, default_value=prop.val, max_value=prop.max_val, min_value=prop.min_val, user_data=prop, callback= lambda sender, data, property: getattr(property, 'callback')(sender, data, property) if hasattr(property, 'callback') else setattr(property, 'val', data))
 
