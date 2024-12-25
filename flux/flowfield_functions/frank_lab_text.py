@@ -24,7 +24,7 @@ def get_flowfield_function_name():
 
 def flowfield():
 	previous_angles = None
-	w, h = (cfg.ff_width, cfg.ff_height)
+	w,h = (cfg.ff_width, cfg.ff_height)
 	angle_corrector = np.random.random(size=cfg.max_particles)*0.5 + 0.01
 	font_coords, red, green, blue, alpha = [], None, None, None, None
 
@@ -49,8 +49,9 @@ def flowfield():
 
 	def init_flowfield():
 		nonlocal text, font_size, font_path, font_coords, w, h, red, green, blue, alpha, reset_particles
-		cfg.reset_particles = reset_particles
 
+		w,h = (cfg.ff_width, cfg.ff_height)
+		cfg.reset_particles = reset_particles
 		font = ImageFont.truetype(font_path,size=font_size, encoding='utf-8')
 		img = Image.new(mode="RGBA", size=(w,h), color=(0, 0, 0, 0))
 		img = radial_gradient(img, (w//2, h//2), (0, 0, 255), (255, 255, 0), font.getbbox(text, anchor='mm'))
@@ -74,11 +75,10 @@ def flowfield():
 		cfg.particles[:2, reset_indices] = font_coords[choice].T
 		cfg.particles[2, reset_indices] = np.random.randint(cfg.min_age, cfg.max_age + 1, size=np.sum(reset_indices))
 
-	init_flowfield()
 
 	args = SimpleNamespace(
 		text = SimpleNamespace(
-			val = "FLUX",
+			val = text,
 			callback = lambda sender, data, property: set_text(data),
 			type = cfg.TYPE_INPUT_TEXT
 		),
@@ -109,4 +109,4 @@ def flowfield():
 		dx = np.cos(angles)
 		dy = np.sin(angles)
 		return dx, dy
-	return args, noise
+	return args, noise, init_flowfield

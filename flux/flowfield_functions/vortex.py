@@ -35,4 +35,4 @@ def flowfield():
 		# Normalize the resulting angle components
 		norm = np.maximum(np.sqrt(f_sin**2 + f_cos**2), 1e-8)
 		return f_cos/norm, f_sin/norm
-	return args, noise
+	return args, noise, init_flowfield

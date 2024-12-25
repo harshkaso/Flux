@@ -37,4 +37,4 @@ def flowfield():
 		coords[2] = np.repeat(frame_count, coords[0].size) * args.time_scale.val
 		angles = fns_noise.genFromCoords(coords) * TAU
 		return np.cos(angles), np.sin(angles)
-	return args, noise
+	return args, noise, init_flowfield

@@ -19,7 +19,7 @@ def spawn_paricles():
 
 def recalc_particles():
   
-  dx, dy = cfg.ff_func(cfg.particles, dpg.get_frame_count())
+  dx, dy = cfg.ff_func.noise(cfg.particles, dpg.get_frame_count())
   
   cfg.particles[0] = np.add(cfg.particles[0], np.multiply(dx, cfg.speed))
   cfg.particles[1] = np.add(cfg.particles[1], np.multiply(dy, cfg.speed))
@@ -76,6 +76,7 @@ def handle_viewport_resize(sender, data):
       dpg.configure_item('parameters', pos=(cfg.ff_width, 0)) # Update side panel position
       background(cfg.bg_color)
       dimmer(cfg.bg_color, cfg.d_alpha)
+      cfg.ff_func.init_flowfield()
       dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
 
   

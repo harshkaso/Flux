@@ -21,12 +21,11 @@ def flowfield():
       max_val = 0.5
     )
   )
-  init_flowfield()
-  
+
   def noise(particles, frame_count):
     nonlocal args
     angles = (np.cos(particles[0]*args.scale.val) + np.sin(particles[1]*args.scale.val)) * args.curviness.val
     return np.cos(angles), np.sin(angles)
 
-  return args, noise
+  return args, noise, init_flowfield
 
