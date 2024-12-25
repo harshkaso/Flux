@@ -1,7 +1,7 @@
 ﻿<h1 align='center'>Flux</h1>
 A beautiful dynamic flowfield visualization with particle simulation. It demonstrates the movement of particles within a vector field, offering an engaging visualization of the underlying noisemaps.
 <p align='center'>
-    <img src='assets\screenshots\Flux_FranksLabText_light.png'>
+    <img src='assets\screenshots\Flux_FranksLabText_Light.png'>
 </p>
 <p align='center'>
     <img src='assets\screenshots\SeaAnemone_FNS.png'>
