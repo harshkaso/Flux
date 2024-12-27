@@ -6,6 +6,7 @@ def get_flowfield_function_name():
 	return 'Vortex'
 
 def flowfield():
+	attractors, rotations = None, None
 	def spawn_attractors(sender, data, property):
 		nonlocal attractors, rotations, args
 		setattr(property, 'val', data)
@@ -21,11 +22,13 @@ def flowfield():
 			callback = spawn_attractors
 		)
 	)
-	attractors = (np.random.rand(args.points.val, 2) * (cfg.ff_width, cfg.ff_height)).astype(np.int32)
-	rotations = np.random.choice([np.pi / 2, -np.pi / 2], size=(args.points.val))
+	def init_flowfield():
+		nonlocal args, spawn_attractors
+		spawn_attractors(None, args.points.val, args.points)
+		cfg.reset_particles = cfg.default_reset_particles
 
 	def noise(particles, frame_count):
-		nonlocal args, attractors
+		nonlocal args, attractors, rotations
 		vectors = attractors[:, :, np.newaxis] - particles[:2]
 		angles = np.arctan2(vectors[:,1,:], vectors[:,0,:]) + rotations[:, np.newaxis]
 		weights = 1/np.maximum(np.linalg.norm(vectors, axis=1), 1e-8)
