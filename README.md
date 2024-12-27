@@ -1,5 +1,14 @@
 ﻿<h1 align='center'>Flux</h1>
-A beautiful dynamic flowfield visualization with particle simulation. It demonstrates the movement of particles within a vector field, offering an engaging visualization of the underlying noisemaps.
+Flux is an interactive Python application that brings flow fields to life, creating mesmerizing particle animations in real time. With configurable flow field functions, color schemes, and particle dynamics, Flux is perfect for both artistic expression and technical exploration.
+
+## Features
+- **Customizable Flow Field**: Choose from various mathematical functions to define the behavior of particles in the field.
+- **Interactive Particle Control**: Modify particle speed, lifespan, radius, and more via an intuitive GUI.
+- **Real-Time Rendering**: Smoothly renders particle animations with frame-by-frame updates.
+- **User-Friendly Interface**: Built with a modern and responsive design using dearpygui.
+
+
+## Screenshots
 <p align='center'>
     <img src='assets\screenshots\Flux_FranksLabText_Light.png'>
 </p>
@@ -13,7 +22,7 @@ A beautiful dynamic flowfield visualization with particle simulation. It demonst
     <img src='assets\screenshots\Bubbles_Quattro.png'>
 </p>
 
-#### For additional screenshots, visit the full folder: [Screenshots Folder](assets/screenshots)
+**_For additional screenshots, visit the full folder: [Screenshots Folder](assets/screenshots)_**
 
 ## System Support
 |     OS    | Supported |
@@ -45,7 +54,7 @@ python flux.py
 
 5. Sit back, relax and enjoy!
 
-# Credits
+## Credits
 
 Special thanks to
 
