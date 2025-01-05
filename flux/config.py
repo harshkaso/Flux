@@ -5,11 +5,17 @@ import numpy as np
 prev_frame_texture = ''
 prev_frame = ''
 ff_func_settings = 'ff-func-settings'
+mask_settings = 'mask-settings'
 
-
-ff_func = ''                # Flowfield Function
+ff_func = ''                # Flowf 234567ield Function
 default_fff = 'Franks Lab Text'     # Default Flowfield Function Name
 
+ff_reset_coords = []        # Flowfield Reset Coords
+fade = 1                    # Mask Fade
+max_fade = 10               # Max Fade
+mask = ''                   # Mask
+mask_func = ''              # Mask Function
+default_mf = 'Unmasked'     # Default Mask Function Name
 clr_func = ''               # Color Function
 default_cf = 'Angle'        # Default Color Function Name
 
@@ -46,14 +52,3 @@ particles = np.ndarray((9, max_particles))
 TYPE_SLIDER_INT = 'SLIDER_INT'
 TYPE_SLIDER_FLOAT = 'SLIDER_FLOAT'
 TYPE_INPUT_TEXT = 'INPUT_TEXT'
-
-# DEFAULT FUNCTION DEFINITIONS
-def default_reset_particles(reset_indices):
-    global particles, ff_width, ff_height, min_age, max_age
-    particles[0, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_width)
-    particles[1, reset_indices] = np.multiply(np.random.rand(np.sum(reset_indices)), ff_height)
-    particles[2, reset_indices] = np.random.randint(min_age, max_age + 1, size=np.sum(reset_indices))
-
-
-# DEFAULT FUNCTION REFERENCES
-reset_particles = default_reset_particles

@@ -2,9 +2,10 @@ import dearpygui.dearpygui as dpg
 import numpy as np
 import color_functions as cf
 import flowfield_functions as fff
+import mask_functions as mf
 import config as cfg
 
-def spawn_paricles():
+def spawn_particles():
   cfg.particles[0] = [np.random.random() * cfg.ff_width for _ in range(cfg.max_particles)]  # X
   cfg.particles[1] = [np.random.random() * cfg.ff_height for _ in range(cfg.max_particles)] # Y
   cfg.particles[2] = [np.random.randint(cfg.min_age, cfg.max_age) for _ in range(cfg.max_particles)] # age
@@ -17,19 +18,33 @@ def spawn_paricles():
   for p in cfg.particles.T:
     p[8] = dpg.draw_circle(center=(p[0], p[1]), radius=cfg.radius, parent='flowfield', fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
 
+def reset_particles(reset_indices):
+    total_reset_particles = np.sum(reset_indices)
+    if not total_reset_particles:
+      return
+    reset_coords = np.argwhere(np.logical_and(cfg.ff_reset_coords, cfg.mask)==1)
+    indices = np.random.choice(len(reset_coords), size=total_reset_particles)
+    cfg.particles[:2, reset_indices] = reset_coords[indices][:, ::-1].T
+    cfg.particles[2, reset_indices] = np.random.randint(cfg.min_age,cfg.max_age + 1, size=total_reset_particles)
+
 def recalc_particles():
   
   dx, dy = cfg.ff_func.noise(cfg.particles, dpg.get_frame_count())
-  
-  cfg.particles[0] = np.add(cfg.particles[0], np.multiply(dx, cfg.speed))
-  cfg.particles[1] = np.add(cfg.particles[1], np.multiply(dy, cfg.speed))
+
+  masked_indices = cfg.mask[cfg.particles[1].astype(int), cfg.particles[0].astype(int)] != 1
+  total_masked_particles = np.sum(masked_indices)
+  if total_masked_particles:
+    cfg.particles[2, masked_indices] = np.random.choice(cfg.fade, total_masked_particles)
+
+  cfg.particles[0] = np.clip(np.add(cfg.particles[0], np.multiply(dx, cfg.speed)), 0, cfg.ff_width-1)
+  cfg.particles[1] = np.clip(np.add(cfg.particles[1], np.multiply(dy, cfg.speed)), 0, cfg.ff_height-1)
   cfg.particles[2] = np.add(cfg.particles[2], -1)
 
   # Reset particles if out of bounds or expired
   out_of_bounds = (cfg.particles[0] < 0) | (cfg.particles[0] > cfg.ff_width) | (cfg.particles[1] < 0) | (cfg.particles[1] > cfg.ff_height)
   expired = cfg.particles[2] <= 0
   reset_indices = np.logical_or(out_of_bounds, expired)
-  cfg.reset_particles(reset_indices)
+  reset_particles(reset_indices)
 
   args = {
     'particles': cfg.particles,
@@ -76,7 +91,10 @@ def handle_viewport_resize(sender, data):
       dpg.configure_item('parameters', pos=(cfg.ff_width, 0)) # Update side panel position
       background(cfg.bg_color)
       dimmer(cfg.bg_color, cfg.d_alpha)
-      cfg.ff_func.init_flowfield()
+      cfg.ff_reset_coords = cfg.ff_func.init_flowfield()
+      cfg.mask = cfg.mask_func.calc_mask()
+      spawn_particles()
+      reset_particles(np.repeat(True, cfg.max_particles))
       dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
 
   
@@ -140,6 +158,13 @@ def setup_flux():
     cfg.random_radius = data
     cfg.particles[7] = np.repeat(cfg.radius, cfg.max_particles) if not cfg.random_radius else np.random.rand(cfg.max_particles)*cfg.radius
     
+  def set_mask_function(sender, data):
+    dpg.delete_item(cfg.mask_settings, children_only=True)
+    cfg.mask_func = mf.get_mask_function(data)
+    cfg.mask = cfg.mask_func.calc_mask()
+
+  def set_mask_fade(sender, data):
+    cfg.fade = data
 
   def set_color_function(sender, data):
     cfg.clr_func = cf.get_color_function(data)
@@ -242,6 +267,18 @@ def setup_flux():
     
       dpg.add_separator()
 
+      # Mask  Settings UI
+      with dpg.group(horizontal=True):
+        dpg.add_button(tag='bg-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='mask-settings')
+        dpg.add_text(default_value='Mask Properties')
+      with dpg.group(tag='mask-general-settings'):
+        dpg.add_combo(width=cfg.sp_width/2, label='Mask Function', tag='mask-functions', items=mf.get_mask_function_names(), default_value=cfg.default_mf, callback=set_mask_function)
+        dpg.add_slider_int(width=cfg.sp_width/2, label='fade', tag='fade', default_value=cfg.fade, min_value=1, max_value=cfg.max_fade, callback=set_mask_fade)
+        # UI container for selected Mask.
+        with dpg.group(tag=cfg.mask_settings):
+            pass
+      dpg.add_separator()
+
       # Color Settings UI
       with dpg.group(horizontal=True):
         dpg.add_button(tag='cl-dropdown', arrow=True, direction=dpg.mvDir_Down, callback=handle_dropdown, user_data='color-settings')
@@ -262,10 +299,9 @@ def setup_flux():
       dpg.add_spacer(height=3)
 
   # initializing with default functions
-  spawn_paricles()
   cfg.ff_func = fff.get_flowfield_function(cfg.default_fff)   # FlowField Function
   cfg.clr_func = cf.get_color_function(cfg.default_cf)    # Color Function
-
+  cfg.mask_func = mf.get_mask_function(cfg.default_mf)    # Mask
 
   
 def start_flux():
@@ -276,9 +312,6 @@ def start_flux():
   setup_flux()
   dpg.show_viewport()
   dpg.set_viewport_resize_callback(callback=handle_viewport_resize)
-  # dpg.set_frame_callback(20, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
-  # dpg.set_viewport_vsync(False)
-  # dpg.show_metrics()
-  # dpg.show_style_editor()
+  dpg.set_viewport_vsync(False)
   dpg.start_dearpygui()
   dpg.destroy_context()

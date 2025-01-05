@@ -13,13 +13,13 @@ Flux is an interactive Python application that brings flow fields to life, creat
     <img src='assets\screenshots\Flux_FranksLabText_Light.png'>
 </p>
 <p align='center'>
-    <img src='assets\screenshots\SeaAnemone_FNS.png'>
+    <img src='assets\screenshots\Purple_10_Vortex.png'>
 </p>
 <p align='center'>
     <img src='assets\screenshots\Greens_Swirly.png'>
 </p>
 <p align='center'>
-    <img src='assets\screenshots\Bubbles_Quattro.png'>
+    <img src='assets\screenshots\SeaAnemone_FNS.png'>
 </p>
 
 **_For additional screenshots, visit the full folder: [Screenshots Folder](assets/screenshots)_**

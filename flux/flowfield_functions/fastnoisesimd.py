@@ -12,8 +12,7 @@ def flowfield():
 	TAU = np.pi * 2
 
 	def init_flowfield():
-		cfg.reset_particles = cfg.default_reset_particles
-		# cfg.reset_particles(np.repeat(True, cfg.max_particles))
+		return np.ones((cfg.ff_height, cfg.ff_width), dtype=bool)
 
 	args = SimpleNamespace(
 		noise_scale = SimpleNamespace(

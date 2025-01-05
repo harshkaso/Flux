@@ -7,7 +7,7 @@ def get_flowfield_function_name():
 
 def flowfield():
   def init_flowfield():
-    cfg.reset_particles = cfg.default_reset_particles
+    return np.ones((cfg.ff_height, cfg.ff_width), dtype=bool)
 
   args = SimpleNamespace(
     curviness = SimpleNamespace(

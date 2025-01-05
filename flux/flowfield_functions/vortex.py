@@ -25,7 +25,8 @@ def flowfield():
 	def init_flowfield():
 		nonlocal args, spawn_attractors
 		spawn_attractors(None, args.points.val, args.points)
-		cfg.reset_particles = cfg.default_reset_particles
+		return np.ones((cfg.ff_height, cfg.ff_width), dtype=bool)
+
 
 	def noise(particles, frame_count):
 		nonlocal args, attractors, rotations

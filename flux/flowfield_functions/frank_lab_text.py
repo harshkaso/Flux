@@ -26,7 +26,7 @@ def flowfield():
 	previous_angles = None
 	w,h = (cfg.ff_width, cfg.ff_height)
 	angle_corrector = np.random.random(size=cfg.max_particles)*0.5 + 0.01
-	font_coords, red, green, blue, alpha = [], None, None, None, None
+	red, green, blue, alpha = None, None, None, None
 
 	text = 'FLUX'
 	font_size = 450
@@ -48,10 +48,9 @@ def flowfield():
 		init_flowfield()
 
 	def init_flowfield():
-		nonlocal text, font_size, font_path, font_coords, w, h, red, green, blue, alpha, reset_particles
+		nonlocal text, font_size, font_path, w, h, red, green, blue, alpha
 
 		w,h = (cfg.ff_width, cfg.ff_height)
-		cfg.reset_particles = reset_particles
 		font = ImageFont.truetype(font_path,size=font_size, encoding='utf-8')
 		img = Image.new(mode="RGBA", size=(w,h), color=(0, 0, 0, 0))
 		img = radial_gradient(img, (w//2, h//2), (0, 0, 255), (255, 255, 0), font.getbbox(text, anchor='mm'))
@@ -66,15 +65,7 @@ def flowfield():
 		green = np.array(img.split()[1])/255.0
 		blue = np.array(img.split()[2])/255.0
 		alpha = np.array(img.split()[3])/255.0
-		font_coords = np.argwhere(alpha==1)[:, ::-1]
-		reset_particles(np.repeat(True, cfg.max_particles))
-
-	def reset_particles(reset_indices):
-		nonlocal font_coords
-		choice = np.random.choice(len(font_coords), size=np.sum(reset_indices), replace=False)
-		cfg.particles[:2, reset_indices] = font_coords[choice].T
-		cfg.particles[2, reset_indices] = np.random.randint(cfg.min_age, cfg.max_age + 1, size=np.sum(reset_indices))
-
+		return alpha
 
 	args = SimpleNamespace(
 		text = SimpleNamespace(
