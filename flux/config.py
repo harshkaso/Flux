@@ -4,6 +4,8 @@ import numpy as np
 # UI TAGS/IDS
 prev_frame_texture = ''
 prev_frame = ''
+flowfield_container = 'flowfield-container'
+particles_container = 'particles-container'
 ff_func_settings = 'ff-func-settings'
 mask_settings = 'mask-settings'
 
@@ -46,7 +48,7 @@ border = False              # Border of particles
 border_rgb = [1,5,58,255]   # Border Color
 
 # CONTAINERS
-particles = np.ndarray((9, max_particles))
+particles = []            # Particles
 
 # TYPES
 TYPE_SLIDER_INT = 'SLIDER_INT'

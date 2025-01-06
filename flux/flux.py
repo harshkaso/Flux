@@ -6,6 +6,9 @@ import mask_functions as mf
 import config as cfg
 
 def spawn_particles():
+  if len(cfg.particles):
+    dpg.delete_item(cfg.particles_container, children_only=True)
+  cfg.particles = np.ndarray((9, cfg.max_particles))
   cfg.particles[0] = [np.random.random() * cfg.ff_width for _ in range(cfg.max_particles)]  # X
   cfg.particles[1] = [np.random.random() * cfg.ff_height for _ in range(cfg.max_particles)] # Y
   cfg.particles[2] = [np.random.randint(cfg.min_age, cfg.max_age) for _ in range(cfg.max_particles)] # age
@@ -16,7 +19,7 @@ def spawn_particles():
   cfg.particles[7] = np.repeat(cfg.radius, cfg.max_particles) # Radius
   # for each coordinates draw a particle
   for p in cfg.particles.T:
-    p[8] = dpg.draw_circle(center=(p[0], p[1]), radius=cfg.radius, parent='flowfield', fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
+    p[8] = dpg.draw_circle(center=(p[0], p[1]), radius=cfg.radius, parent=cfg.particles_container, fill=list(p[3:7]), color=list(p[3:7]), show=False) # Reference to drawn object
 
 def reset_particles(reset_indices):
     total_reset_particles = np.sum(reset_indices)
@@ -69,7 +72,7 @@ def background(clr):
     if dpg.does_item_exist('w_background'):
       dpg.configure_item('w_background', fill=clr, color=clr,pmax=(cfg.ff_width, cfg.ff_height), show=True)
     else:
-      dpg.draw_rectangle(tag='w_background', pmin=(0,0), pmax=(cfg.ff_width, cfg.ff_height), parent='flowfield', fill=clr, color=clr)
+      dpg.draw_rectangle(tag='w_background', pmin=(0,0), pmax=(cfg.ff_width, cfg.ff_height), parent=cfg.flowfield_container, before=cfg.particles_container, fill=clr, color=clr)
       
 def dimmer(clr, d_alpha):
   with dpg.mutex():
@@ -80,10 +83,10 @@ def dimmer(clr, d_alpha):
     if dpg.does_item_exist('dimmer'):
         dpg.configure_item('dimmer', pmax=(cfg.ff_width, cfg.ff_height), fill=color, color=color)
     else:
-      dpg.draw_rectangle(tag='dimmer', pmin=(0,0), pmax=(cfg.ff_width, cfg.ff_height), parent='flowfield', fill=color, color=color)
+      dpg.draw_rectangle(tag='dimmer', pmin=(0,0), pmax=(cfg.ff_width, cfg.ff_height), parent=cfg.flowfield_container, before=cfg.particles_container, fill=color, color=color)
 
 def handle_viewport_resize(sender, data):
-  with dpg.mutex():
+    dpg.lock_mutex()
     if data[2] != cfg.w_width or data[3] != cfg.w_height:
       cfg.w_width, cfg.w_height = data[2:]
       cfg.ff_width = cfg.w_width - cfg.sp_width
@@ -96,6 +99,7 @@ def handle_viewport_resize(sender, data):
       spawn_particles()
       reset_particles(np.repeat(True, cfg.max_particles))
       dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=init_frame_buffer))
+    dpg.unlock_mutex()
 
   
 def init_frame_buffer(sender, buffer):
@@ -108,7 +112,7 @@ def init_frame_buffer(sender, buffer):
       cfg.prev_frame_texture = dpg.add_raw_texture(width=cfg.w_width, height=cfg.w_height, default_value=buffer, format=dpg.mvFormat_Float_rgba)
     if dpg.does_item_exist(cfg.prev_frame):
       dpg.delete_item(cfg.prev_frame)
-    cfg.prev_frame = dpg.add_image(cfg.prev_frame_texture, width=cfg.ff_width, height=cfg.ff_height, parent='flowfield', pos=(0,0), uv_min=(0,0), uv_max=(cfg.ff_width/cfg.w_width, 1))
+    cfg.prev_frame = dpg.add_image(cfg.prev_frame_texture, width=cfg.ff_width, height=cfg.ff_height, parent=cfg.flowfield_container, pos=(0,0), uv_min=(0,0), uv_max=(cfg.ff_width/cfg.w_width, 1))
     # Start the frame buffer
     
     dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
@@ -213,7 +217,7 @@ def setup_flux():
         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, [r,g,b,a], category=dpg.mvThemeCat_Core)
         dpg.add_theme_color(dpg.mvThemeCol_Text, [255,255,255,255] if l < threshold else [0,0,0,255], category=dpg.mvThemeCat_Core)
         dpg.add_theme_color(dpg.mvThemeCol_FrameBg, [int(r-(r/20)),int(g-(g/20)),int(b-(b/20)),100], category=dpg.mvThemeCat_Core)
-    dpg.bind_item_theme('flowfield', flowfield_theme)    
+    dpg.bind_item_theme(cfg.flowfield_container, flowfield_theme)    
     dpg.set_frame_callback(dpg.get_frame_count()+1, callback=lambda: dpg.output_frame_buffer(callback=clear_frame))
       
   def handle_dropdown(sender, data, group):
@@ -225,14 +229,15 @@ def setup_flux():
       dpg.configure_item(group, show=True)
 
   # Main Window
-  with dpg.window(tag='flowfield', pos=(0,0)):
+  with dpg.window(tag=cfg.flowfield_container, pos=(0,0)):
+    dpg.set_primary_window(cfg.flowfield_container, True)
+    dpg.add_draw_layer(tag=cfg.particles_container)
     # Theme setting
-    dpg.set_primary_window('flowfield', True)
     with dpg.theme() as flowfield_theme:
       with dpg.theme_component(dpg.mvAll):
         dpg.add_theme_style(dpg.mvStyleVar_WindowPadding, 0)
         dpg.add_theme_color(dpg.mvThemeCol_ChildBg, cfg.bg_color, category=dpg.mvThemeCat_Core)
-    dpg.bind_item_theme('flowfield', flowfield_theme)
+    dpg.bind_item_theme(cfg.flowfield_container, flowfield_theme)
 
     # Flux GUI
     with dpg.child_window(tag='parameters', pos=(cfg.ff_width, 0), width=cfg.sp_width, height=-1):
@@ -248,9 +253,8 @@ def setup_flux():
         dpg.add_text(default_value='Flowfield Properties')
       with dpg.group(tag='flowfield-settings'):
         dpg.add_combo(width=cfg.sp_width/2, label='FlowField Function', tag='flowfield-functions', items=fff.get_flowfield_function_names(), default_value=cfg.default_fff, callback=set_flowfield_function)
-      with dpg.group(tag=cfg.ff_func_settings):
-        # UI container for selected Flowfield Function.
-        pass
+       # UI container for selected Flowfield Function.
+      dpg.add_group(tag=cfg.ff_func_settings)
       dpg.add_separator()
       
       # Particle Settings UI
@@ -275,8 +279,7 @@ def setup_flux():
         dpg.add_combo(width=cfg.sp_width/2, label='Mask Function', tag='mask-functions', items=mf.get_mask_function_names(), default_value=cfg.default_mf, callback=set_mask_function)
         dpg.add_slider_int(width=cfg.sp_width/2, label='fade', tag='fade', default_value=cfg.fade, min_value=1, max_value=cfg.max_fade, callback=set_mask_fade)
         # UI container for selected Mask.
-        with dpg.group(tag=cfg.mask_settings):
-            pass
+        dpg.add_group(tag=cfg.mask_settings)
       dpg.add_separator()
 
       # Color Settings UI
