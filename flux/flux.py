@@ -23,9 +23,9 @@ def spawn_particles():
 
 def reset_particles(reset_indices):
     total_reset_particles = np.sum(reset_indices)
-    if not total_reset_particles:
-      return
     reset_coords = np.argwhere(np.logical_and(cfg.ff_reset_coords, cfg.mask)==1)
+    if not (total_reset_particles and len(reset_coords)):
+      return
     indices = np.random.choice(len(reset_coords), size=total_reset_particles)
     cfg.particles[:2, reset_indices] = reset_coords[indices][:, ::-1].T
     cfg.particles[2, reset_indices] = np.random.randint(cfg.min_age,cfg.max_age + 1, size=total_reset_particles)

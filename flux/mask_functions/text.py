@@ -17,7 +17,6 @@ def mask():
         nonlocal text
         text = new_text
         cfg.mask = calc_mask()
-        print(cfg.mask.shape)
 
     def set_font_size(new_size):
         nonlocal font_size

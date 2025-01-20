@@ -2,6 +2,7 @@ import numpy as np
 import config as cfg
 from PIL import Image, ImageDraw, ImageFont
 from types import SimpleNamespace
+from utils.flowfield import initialize
 
 def radial_gradient(i, center, c1, c2, bbox):
 	mask = Image.new('L',  i.size, 0)
@@ -9,6 +10,8 @@ def radial_gradient(i, center, c1, c2, bbox):
 	draw.rectangle([bbox[0]+cfg.ff_width//2, bbox[1]+cfg.ff_height//2, bbox[2]+cfg.ff_width//2, bbox[3]+cfg.ff_height//2], fill=255)
 	center = np.array(center)
 	max_dist = (bbox[2]-bbox[0]) / 2
+	if not max_dist:
+		return i
 	x, y = np.meshgrid(np.arange(i.size[0]), np.arange(i.size[1]))
 	c = np.linalg.norm(np.stack((x, y), axis=2) - center, axis=2) / max_dist
 	c = np.clip(c, 0, 1)
@@ -35,17 +38,17 @@ def flowfield():
 	def set_text(new_text):
 		nonlocal text
 		text = new_text
-		init_flowfield()
+		initialize(init_flowfield)
 
 	def set_font_size(new_size):
 		nonlocal font_size
 		font_size = new_size
-		init_flowfield()
+		initialize(init_flowfield)
 
 	def set_font_path(new_path):
 		nonlocal font_path
 		font_path = new_path
-		init_flowfield()
+		initialize(init_flowfield)
 
 	def init_flowfield():
 		nonlocal text, font_size, font_path, w, h, red, green, blue, alpha
