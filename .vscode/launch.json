@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Flux",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/flux/__main__.py",
+            "args": [],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}
