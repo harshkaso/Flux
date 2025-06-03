@@ -43,7 +43,10 @@ pip install --upgrade pip
 echo "Installing Nuitka, setuptools, and wheel..."
 pip install nuitka setuptools wheel
 
-echo "Installing dependencies from requirements.txt..."
+echo "Installing NumPy first (if required as a build-time dependency for other packages)..."
+pip install numpy
+
+echo "Installing remaining dependencies from requirements.txt..."
 pip install -r requirements.txt
 
 # --- Create Distribution Directory ---
