@@ -5,3 +5,4 @@ pyfastnoisesimd==0.4.2
 setuptools==75.6.0
 wheel==0.45.1
 dearcygui
+freetype-py
