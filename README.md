@@ -54,6 +54,53 @@ python flux.py
 
 5. Sit back, relax and enjoy!
 
+### Adding Custom Color Functions
+
+Flux supports loading custom color function plugins from an external folder. This allows you to extend the available color behaviors without modifying the core application code.
+
+**How it Works:**
+
+1.  **Create the Plugin Folder**:
+    *   Next to the main Flux executable (e.g., `Flux_Linux`, `Flux_Windows.exe`, or `Flux_macOS` after you've built or downloaded it), create a folder named `user_color_plugins`.
+    *   The application will automatically check this folder for custom color function modules when it starts.
+
+2.  **Develop Your Custom Color Function**:
+    *   Inside the `user_color_plugins` folder, create a new Python file (e.g., `my_custom_colors.py`).
+    *   In this file, define a Python class that represents your custom color function.
+    *   **Class Requirements**:
+        *   Your class **must** have a unique `name` attribute (e.g., `name = "My Awesome Swirls"`). This name is what will appear in the color function selection UI in Flux.
+        *   Your class needs to implement the methods and properties that Flux expects for color functions. This typically involves a method that takes particle data (like age, position, angle, radius) as input and returns color values for each particle.
+        *   It's highly recommended to look at the existing color function classes within the main application's `flux/color_function_library/` directory (e.g., `age.py`, `radius.py`) as examples for structure and required methods. (Note: You don't need to place your plugins there; use the `user_color_plugins` folder.)
+
+3.  **Launch Flux**:
+    *   Start Flux. If your plugin is correctly structured and placed in the `user_color_plugins` folder, it should appear in the list of available color functions.
+    *   The application will print messages to the console (if visible) regarding the loading of user plugins, including any errors encountered.
+
+**Example Snippet (Illustrative):**
+
+```python
+# In user_color_plugins/my_gradient.py
+
+class MyCustomGradient:
+    def __init__(self):
+        self.name = "My Custom Gradient"  # This name appears in the UI
+
+    # This is a simplified example; your actual method will depend on
+    # how Flux expects to call color functions and what data it provides.
+    # It would likely receive particle data (positions, ages, etc.)
+    # and need to return an array of colors.
+    def get_colors(self, particle_data, color1, color2, color3, alpha):
+        # Replace with your actual color generation logic
+        # colors = ... calculate colors for particles ...
+        # return colors
+        pass
+
+    # Add any other methods or attributes your color function needs
+    # or that are expected by Flux (see built-in examples).
+```
+
+This plugin system allows for easy extension and personalization of the particle coloring behavior in Flux.
+
 ## Building from Source
 
 This project uses Nuitka to compile the Python code into standalone executables for different operating systems. Build scripts (`build.sh` for Linux/macOS, `build.bat` for Windows) are provided in the root directory to automate this process.
