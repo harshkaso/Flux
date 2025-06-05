@@ -67,7 +67,7 @@ NUITKA_OPTIONS=(
     # Data files and directories
     "--include-data-dir=assets=assets"
     "--include-data-dir=flux/Space_Mono=flux/Space_Mono"
-    "--include-plugin-directory=flux/color_function_library"
+    "--include-package=flux.color_function_library"
     # Add more options as needed
     # "--enable-plugin=tk-inter" # If dearpygui has issues with tkinter backend
     # For macOS, if using entitlements:

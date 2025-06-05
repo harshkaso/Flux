@@ -56,7 +56,7 @@ python -m nuitka ^
     --include-module=freetype ^
     --include-data-dir=assets=assets ^
     --include-data-dir=flux\Space_Mono=flux\Space_Mono ^
-    --include-plugin-directory=flux/color_function_library ^
+    --include-package=flux.color_function_library ^
     --windows-disable-console ^
     --mingw64 ^
     "%ENTRY_POINT%"
