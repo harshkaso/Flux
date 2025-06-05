@@ -3,6 +3,9 @@
 # Exit on error
 set -e
 
+echo "Removing old venv_build directory..."
+rm -rf "venv_build" # Quoted to be safe with VENV_NAME variable later if used
+
 # --- Configuration ---
 APP_NAME="Flux"
 ENTRY_POINT="flux/__main__.py"
@@ -26,12 +29,8 @@ fi
 echo "Building for $OS_NAME, output name: $OUTPUT_NAME"
 
 # --- Setup Virtual Environment ---
-if [ ! -d "$VENV_NAME" ]; then
-    echo "Creating virtual environment: $VENV_NAME"
-    python3 -m venv "$VENV_NAME"
-else
-    echo "Virtual environment $VENV_NAME already exists."
-fi
+echo "Creating virtual environment: $VENV_NAME"
+python3 -m venv "$VENV_NAME"
 
 echo "Activating virtual environment..."
 source "$VENV_NAME/bin/activate"
@@ -41,13 +40,16 @@ echo "Upgrading pip..."
 pip install --upgrade pip
 
 echo "Installing Nuitka, setuptools, and wheel..."
-pip install nuitka setuptools wheel
+pip install --no-cache-dir nuitka setuptools wheel
 
-echo "Installing NumPy first (if required as a build-time dependency for other packages)..."
-pip install numpy
+echo "Installing NumPy (no cache)..."
+pip install --no-cache-dir numpy
 
-echo "Installing remaining dependencies from requirements.txt..."
-pip install -r requirements.txt
+echo "Installing freetype-py (no cache)..."
+pip install --no-cache-dir freetype-py
+
+echo "Installing remaining dependencies from requirements.txt (no cache)..."
+pip install --no-cache-dir -r requirements.txt
 
 # --- Create Distribution Directory ---
 mkdir -p "$DIST_DIR"

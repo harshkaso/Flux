@@ -8,15 +8,14 @@ set VENV_NAME=venv_build
 set DIST_DIR=dist
 set OUTPUT_NAME=%APP_NAME%_Windows.exe
 
+ECHO Removing old venv_build directory...
+IF EXIST "%VENV_NAME%" RMDIR /S /Q "%VENV_NAME%"
+
 echo Building for Windows, output name: %OUTPUT_NAME%
 
 REM --- Setup Virtual Environment ---
-if not exist "%VENV_NAME%\Scripts\activate.bat" (
-    echo Creating virtual environment: %VENV_NAME%
-    python -m venv "%VENV_NAME%"
-) else (
-    echo Virtual environment %VENV_NAME% already exists.
-)
+ECHO Creating virtual environment: %VENV_NAME%
+python -m venv "%VENV_NAME%"
 
 echo Activating virtual environment...
 call "%VENV_NAME%\Scripts\activate.bat"
@@ -25,11 +24,17 @@ REM --- Install/Upgrade Build Tools and Dependencies ---
 echo Upgrading pip...
 python -m pip install --upgrade pip
 
-echo Installing Nuitka, setuptools, and wheel...
-pip install nuitka setuptools wheel
+echo Installing Nuitka, setuptools, and wheel (no cache)...
+pip install --no-cache-dir nuitka setuptools wheel
 
-echo Installing dependencies from requirements.txt...
-pip install -r requirements.txt
+echo Installing NumPy (no cache)...
+pip install --no-cache-dir numpy
+
+echo Installing freetype-py (no cache)...
+pip install --no-cache-dir freetype-py
+
+echo Installing remaining dependencies from requirements.txt (no cache)...
+pip install --no-cache-dir -r requirements.txt
 
 REM --- Create Distribution Directory ---
 if not exist "%DIST_DIR%" (
