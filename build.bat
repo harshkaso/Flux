@@ -53,6 +53,7 @@ python -m nuitka ^
     --output-dir="%DIST_DIR%" ^
     --output-filename="%OUTPUT_NAME%" ^
     --enable-plugin=numpy ^
+    --include-module=freetype ^
     --include-data-dir=assets=assets ^
     --include-data-dir=flux\Space_Mono=flux\Space_Mono ^
     --windows-disable-console ^
