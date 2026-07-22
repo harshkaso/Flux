@@ -4,6 +4,7 @@ import logging.config
 from enum import Enum
 from pathlib import Path
 from datetime import datetime
+from typing import Type
 
 
 class LogLevel(Enum):
@@ -20,20 +21,19 @@ class LoggerConfig:
 
 
 def setup_logger(
-    level: LogLevel = LoggerConfig.level,
-    config_file: str = LoggerConfig.config_file,
+    config: Type[LoggerConfig] = LoggerConfig,
     name: str | None = None,
 ) -> logging.Logger:
     try:
         today = datetime.now().strftime("%Y-%m-%d")
-        with open(config_file, "r", encoding="utf-8") as f:
+        with open(config.config_file, "r", encoding="utf-8") as f:
             config_text = f.read()
         config_text.replace("%(date)s", today)
-        config = json.loads(config_text)
-        if level and "root" in config:
-            config["root"]["level"] = level.value
+        dict_config = json.loads(config_text)
+        if config.level and "root" in dict_config:
+            dict_config["root"]["level"] = config.level.value
         Path("logs").mkdir(exist_ok=True)
-        logging.config.dictConfig(config)
+        logging.config.dictConfig(dict_config)
 
         logger = get_logger(name)
 
