@@ -5,14 +5,7 @@ from enum import Enum
 from pathlib import Path
 from datetime import datetime
 from typing import Type
-
-
-class LogLevel(Enum):
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-    CRITICAL = "CRITICAL"
+from flux.core.enums import LogLevel
 
 
 class LoggerConfig:
@@ -28,7 +21,7 @@ def setup_logger(
         today = datetime.now().strftime("%Y-%m-%d")
         with open(config.config_file, "r", encoding="utf-8") as f:
             config_text = f.read()
-        config_text.replace("%(date)s", today)
+        config_text = config_text.replace("%(date)s", today)
         dict_config = json.loads(config_text)
         if config.level and "root" in dict_config:
             dict_config["root"]["level"] = config.level.value
