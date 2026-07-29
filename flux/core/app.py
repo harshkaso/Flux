@@ -6,7 +6,7 @@ from flux.__init__ import __version__
 from flux.gui.app_window import AppWindow
 from flux.gui.sidebar import Sidebar
 from flux.gui.canvas import Canvas
-from flux.gui.themes.manager import ThemeManager
+from flux.theme.manager import ThemeManager
 from flux.gui.widgets.loading import Loading
 from flux.utils.logger import setup_logger, get_logger, shutdown_loggers
 
@@ -39,7 +39,7 @@ class App:
         self.state = State()
         self.sidebar = Sidebar()
         self.canvas = Canvas()
-        self.app_window = AppWindow()
+        self.app_window = AppWindow(self)
 
     def start(self) -> None:
         dpg.show_viewport()

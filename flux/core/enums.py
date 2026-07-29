@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class LogLevel(str, Enum):
@@ -12,3 +12,12 @@ class LogLevel(str, Enum):
 class Theme(str, Enum):
     LIGHT = "light"
     DARK = "dark"
+
+
+class ComponentTheme(Enum):
+    APP_WINDOW = auto()
+    SIDEBAR = auto()
+    TOOL_RAIL = auto()
+    INSPECTOR = auto()
+    CANVAS = auto()
+    LOADING = auto()
