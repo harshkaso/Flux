@@ -1,6 +1,8 @@
 import traceback
 import dearpygui.dearpygui as dpg  # type: ignore
 from flux.core.state import State
+from flux.core.types import ItemTag
+from flux.core.enums import ComponentTheme
 from time import sleep
 from flux.__init__ import __version__
 from flux.gui.app_window import AppWindow
@@ -45,6 +47,7 @@ class App:
         dpg.show_viewport()
         # dpg.start_dearpygui()
         self.app_window.build(sidebar=self.sidebar, canvas=self.canvas)
+        self.apply_theme(self.theme.item_theme(ComponentTheme.APPLICATION))
         try:
             dpg.set_primary_window(self.app_window.window, True)
             dpg.set_exit_callback(self.close_app)
@@ -62,6 +65,9 @@ class App:
             if count > 100:
                 self.loading.hide()
             dpg.render_dearpygui_frame()
+
+    def apply_theme(self, theme: ItemTag) -> None:
+        dpg.bind_theme(theme)
 
     def close_app(self) -> None:
         # TODO: Handle cleanup tasks on exiting.

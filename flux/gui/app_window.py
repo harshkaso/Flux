@@ -18,7 +18,3 @@ class AppWindow:
             with dpg.group(horizontal=True, horizontal_spacing=0.0):
                 sidebar.build()
                 canvas.build()
-        self.apply_theme(self.app.theme.item_theme(ComponentTheme.APP_WINDOW))
-
-    def apply_theme(self, theme: ItemTag) -> None:
-        dpg.bind_item_theme(self.window, theme)
