@@ -6,7 +6,7 @@ from flux.core.models import ThemeSpec, ColorPalette
 from flux.theme.dark import DARK_THEME
 from flux.theme.light import LIGHT_THEME
 
-from flux.theme.builders.app_window import AppWindowTheme
+from flux.theme.builders.application import build_application_theme
 
 
 class ThemeManager:
@@ -19,7 +19,7 @@ class ThemeManager:
         self._compiled: dict[ComponentTheme, ItemTag] = {}
         self._current: ThemeSpec = DARK_THEME
 
-        self._rebuild()
+        self._build_themes()
 
     @property
     def colors(self) -> ColorPalette:
@@ -27,13 +27,13 @@ class ThemeManager:
 
     # TODO: Add proporties to access spacing and typography tokens
 
-    def _rebuild(self) -> None:
-        self._compiled[ComponentTheme.APP_WINDOW] = AppWindowTheme().build(
+    def _build_themes(self) -> None:
+        self._compiled[ComponentTheme.APPLICATION] = build_application_theme(
             self._current
         )
 
-    def item_theme(self, component: ComponentTheme) -> ItemTag:
-        return self._compiled[component]
+    def item_theme(self, componentTheme: ComponentTheme) -> ItemTag:
+        return self._compiled[componentTheme]
 
     def subscribe(self, subscriber: Themeable) -> None:
         self._subscribers.append(subscriber)
@@ -43,6 +43,6 @@ class ThemeManager:
 
     def set_theme(self, theme: Theme) -> None:
         self._current = self._themes[theme]
-        self._rebuild()
+        self._build_themes()
         for subscriber in self._subscribers:
             subscriber.apply_theme()

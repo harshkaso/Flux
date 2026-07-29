@@ -15,6 +15,7 @@ class Theme(str, Enum):
 
 
 class ComponentTheme(Enum):
+    APPLICATION = auto()
     APP_WINDOW = auto()
     SIDEBAR = auto()
     TOOL_RAIL = auto()
