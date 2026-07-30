@@ -8,10 +8,8 @@ logger = get_logger(__name__)
 
 
 class AppWindow:
-    def __init__(self, app) -> None:
-        self.app = app
+    def __init__(self) -> None:
         self._window: ItemTag | None = None
-        app.theme.subscribe(self)
 
     @property
     def window(self) -> ItemTag | None:
@@ -20,7 +18,7 @@ class AppWindow:
     def build(self, sidebar: Container, canvas: Widget) -> None:
         if self._window:
             return
-        with dpg.window(show=True) as self._window:
+        with dpg.window() as self._window:
             with dpg.group(horizontal=True, horizontal_spacing=0.0):
                 sidebar.build()
                 canvas.build()

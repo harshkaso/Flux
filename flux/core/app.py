@@ -1,15 +1,12 @@
-import traceback
+from flux.__init__ import __version__
 import dearpygui.dearpygui as dpg  # type: ignore
 from flux.core.state import State
 from flux.core.types import ItemTag
 from flux.core.enums import ComponentTheme
-from time import sleep
-from flux.__init__ import __version__
 from flux.gui.app_window import AppWindow
 from flux.gui.sidebar import Sidebar
 from flux.gui.canvas import Canvas
 from flux.theme.manager import ThemeManager
-from flux.gui.widgets.loading import Loading
 from flux.utils.logger import setup_logger, get_logger, shutdown_loggers
 
 logger = get_logger(__name__)
@@ -36,22 +33,20 @@ class App:
         dpg.setup_dearpygui()
 
         self.theme = ThemeManager()
-        self.loading = Loading(self)
-        self.loading.show()
         self.state = State()
         self.sidebar = Sidebar()
         self.canvas = Canvas()
-        self.app_window = AppWindow(self)
+        self.app_window = AppWindow()
 
     def start(self) -> None:
         dpg.show_viewport()
-        # dpg.start_dearpygui()
-        self.app_window.build(sidebar=self.sidebar, canvas=self.canvas)
-        self.apply_theme(self.theme.item_theme(ComponentTheme.APPLICATION))
         try:
+            self.app_window.build(sidebar=self.sidebar, canvas=self.canvas)
+            self.apply_theme(self.theme.item_theme(ComponentTheme.APPLICATION))
+
             dpg.set_primary_window(self.app_window.window, True)
             dpg.set_exit_callback(self.close_app)
-            # self.loading.hide()
+
             self.run()
         except Exception:
             logger.error("error occured when starting application", exc_info=True)
@@ -59,11 +54,7 @@ class App:
             dpg.destroy_context()
 
     def run(self) -> None:
-        count = 0
         while dpg.is_dearpygui_running():
-            count += 1
-            if count > 100:
-                self.loading.hide()
             dpg.render_dearpygui_frame()
 
     def apply_theme(self, theme: ItemTag) -> None:
