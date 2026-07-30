@@ -7,8 +7,10 @@ logger = get_logger(__name__)
 
 class Sidebar:
     def __init__(self) -> None:
-        self.window: ItemTag = dpg.generate_uuid()
+        self.window: ItemTag | None = None
 
     def build(self) -> None:
-        with dpg.child_window(tag=self.window):
+        if self.window:
+            return
+        with dpg.child_window(tag=self.window, width=150) as self.window:
             dpg.add_text(default_value="Sidebar")

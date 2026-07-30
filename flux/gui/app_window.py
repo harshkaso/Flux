@@ -10,11 +10,17 @@ logger = get_logger(__name__)
 class AppWindow:
     def __init__(self, app) -> None:
         self.app = app
-        self.window: ItemTag = dpg.generate_uuid()
+        self._window: ItemTag | None = None
         app.theme.subscribe(self)
 
+    @property
+    def window(self) -> ItemTag | None:
+        return self._window
+
     def build(self, sidebar: Container, canvas: Widget) -> None:
-        with dpg.window(tag=self.window, show=True):
+        if self._window:
+            return
+        with dpg.window(show=True) as self._window:
             with dpg.group(horizontal=True, horizontal_spacing=0.0):
                 sidebar.build()
                 canvas.build()
