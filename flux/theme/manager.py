@@ -7,6 +7,7 @@ from flux.theme.dark import DARK_THEME
 from flux.theme.light import LIGHT_THEME
 
 from flux.theme.builders.application import build_application_theme
+from flux.theme.builders.app_window import build_app_window_theme
 
 
 class ThemeManager:
@@ -29,6 +30,9 @@ class ThemeManager:
 
     def _build_themes(self) -> None:
         self._compiled[ComponentTheme.APPLICATION] = build_application_theme(
+            self._current
+        )
+        self._compiled[ComponentTheme.APP_WINDOW] = build_app_window_theme(
             self._current
         )
 
