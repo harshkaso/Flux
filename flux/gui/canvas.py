@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg  # type: ignore
+from flux.core.protocols import AppContext
 from flux.core.types import ItemTag
 from flux.utils.logger import get_logger
 
@@ -6,7 +7,8 @@ logger = get_logger(__name__)
 
 
 class Canvas:
-    def __init__(self) -> None:
+    def __init__(self, app: AppContext) -> None:
+        self.app = app
         self._window: ItemTag | None = None
 
     @property
@@ -16,5 +18,5 @@ class Canvas:
     def build(self) -> None:
         if self._window:
             return
-        with dpg.child_window(tag=self._window, border=False) as self._window:
+        with dpg.child_window(border=False) as self._window:
             dpg.add_text(default_value="Canvas")
