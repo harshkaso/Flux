@@ -4,8 +4,7 @@ from flux.core.state import State
 from flux.core.types import ItemTag
 from flux.core.enums import ComponentTheme
 from flux.gui.app_window import AppWindow
-from flux.gui.sidebar import Sidebar
-from flux.gui.canvas import Canvas
+from flux.gui.overlay import OverlayManager
 from flux.theme.manager import ThemeManager
 from flux.utils.logger import setup_logger, get_logger, shutdown_loggers
 
@@ -16,8 +15,8 @@ class AppConfig:
     def __init__(self) -> None:
         self.title: str = "Flux-" + __version__
         self.control_panel_width: int = 300
-        self.viewport_width: int = 1200
-        self.viewport_height: int = 750
+        self.viewport_width: int = 1440
+        self.viewport_height: int = 900
         self.resizable: bool = False
 
 
@@ -31,19 +30,18 @@ class App:
             resizable=config.resizable,
         )
         dpg.setup_dearpygui()
-
         self.theme = ThemeManager()
-        self.state = State()
-        self.sidebar = Sidebar()
-        self.canvas = Canvas()
-        self.app_window = AppWindow()
+        # self.state = State()
+        # self.overlay = OverlayManager()
+        # self.sidebar = Sidebar(self, width=config.control_panel_width)
+        # self.canvas = Canvas(self)
+        self.app_window = AppWindow(self)
 
     def start(self) -> None:
         dpg.show_viewport()
         try:
-            self.app_window.build(sidebar=self.sidebar, canvas=self.canvas)
-            self.apply_theme(self.theme.item_theme(ComponentTheme.APPLICATION))
-
+            self.theme.subscribe(self)
+            self.apply_theme()
             dpg.set_primary_window(self.app_window.window, True)
             dpg.set_exit_callback(self.close_app)
 
@@ -54,11 +52,17 @@ class App:
             dpg.destroy_context()
 
     def run(self) -> None:
+        # count = 0
         while dpg.is_dearpygui_running():
+            # count += 1
+            # if count == 100:
+            # self.overlay.show_loading(message="Finally Flux is loaded")
+            # if count == 200:
+            #     self.overlay.hide()
             dpg.render_dearpygui_frame()
 
-    def apply_theme(self, theme: ItemTag) -> None:
-        dpg.bind_theme(theme)
+    def apply_theme(self) -> None:
+        dpg.bind_theme(self.theme.item_theme(ComponentTheme.APPLICATION))
 
     def close_app(self) -> None:
         # TODO: Handle cleanup tasks on exiting.

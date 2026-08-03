@@ -10,14 +10,6 @@ class Sidebar:
     def __init__(self, app: AppContext, width: int = 300) -> None:
         self.app = app
         self.width = width
-        self._window: ItemTag | None = None
-
-    @property
-    def window(self) -> ItemTag | None:
-        return self._window
-
-    def build(self) -> None:
-        if self._window:
-            return
-        with dpg.child_window(width=self.width) as self._window:
+        self._window: ItemTag = dpg.generate_uuid()
+        with dpg.child_window(tag=self._window, width=self.width):
             dpg.add_text(default_value="Sidebar")
