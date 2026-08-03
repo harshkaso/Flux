@@ -1,0 +1,9 @@
+[project]
+name = "flux"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "dearpygui>=2.3.1",
+    "numpy>=2.5.1",
+    "xdg-base-dirs>=6.0.2",
+]
