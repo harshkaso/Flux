@@ -24,7 +24,7 @@ def setup_logger(
         config_text = config_text.replace("%(date)s", today)
         dict_config = json.loads(config_text)
         if config.level and "root" in dict_config:
-            dict_config["root"]["level"] = config.level.value
+            dict_config["root"]["level"] = config.level
         Path("logs").mkdir(exist_ok=True)
         logging.config.dictConfig(dict_config)
 
