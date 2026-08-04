@@ -9,6 +9,6 @@ logger = get_logger(__name__)
 class Canvas:
     def __init__(self, app: AppContext) -> None:
         self.app = app
-        self._window: ItemTag = dpg.generate_uuid()
-        with dpg.child_window(tag=self._window, border=False):
+        self._tag: ItemTag = dpg.generate_uuid()
+        with dpg.child_window(tag=self._tag, border=False):
             dpg.add_text(default_value="Canvas")

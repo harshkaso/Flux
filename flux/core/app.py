@@ -1,40 +1,41 @@
-from flux.__init__ import __version__
 import dearpygui.dearpygui as dpg  # type: ignore
 from flux.core.state import State
 from flux.core.types import ItemTag
 from flux.core.enums import ComponentTheme
 from flux.gui.app_window import AppWindow
 from flux.gui.overlay import OverlayManager
+from flux.gui.icons.manager import IconManager
 from flux.theme.manager import ThemeManager
 from flux.utils.logger import setup_logger, get_logger, shutdown_loggers
 
 logger = get_logger(__name__)
 
 
-class AppConfig:
-    def __init__(self) -> None:
-        self.title: str = "Flux-" + __version__
-        self.control_panel_width: int = 300
-        self.viewport_width: int = 1440
-        self.viewport_height: int = 900
-        self.resizable: bool = False
-
-
 class App:
-    def __init__(self, config: AppConfig = AppConfig()):
+    DEFAULT_TITLE = "Flux"
+    DEFAULT_VIEWPORT_WIDTH = 1440
+    DEFAULT_VIEWPORT_HEIGHT = 900
+    DEFAULT_RESIZABLE = False
+
+    def __init__(
+        self,
+        *,
+        title: str = DEFAULT_TITLE,
+        viewport_width: int = DEFAULT_VIEWPORT_WIDTH,
+        viewport_height: int = DEFAULT_VIEWPORT_HEIGHT,
+        resizable: bool = DEFAULT_RESIZABLE,
+    ) -> None:
         dpg.create_context()
         dpg.create_viewport(
-            title=config.title,
-            width=config.viewport_width,
-            height=config.viewport_height,
-            resizable=config.resizable,
+            title=title,
+            width=viewport_width,
+            height=viewport_height,
+            resizable=resizable,
         )
         dpg.setup_dearpygui()
+        self.icons = IconManager()
+        self.icons.load_all()
         self.theme = ThemeManager()
-        # self.state = State()
-        # self.overlay = OverlayManager()
-        # self.sidebar = Sidebar(self, width=config.control_panel_width)
-        # self.canvas = Canvas(self)
         self.app_window = AppWindow(self)
 
     def start(self) -> None:
@@ -42,7 +43,7 @@ class App:
         try:
             self.theme.subscribe(self)
             self.apply_theme()
-            dpg.set_primary_window(self.app_window.window, True)
+            dpg.set_primary_window(self.app_window.tag, True)
             dpg.set_exit_callback(self.close_app)
 
             self.run()
@@ -54,11 +55,6 @@ class App:
     def run(self) -> None:
         # count = 0
         while dpg.is_dearpygui_running():
-            # count += 1
-            # if count == 100:
-            # self.overlay.show_loading(message="Finally Flux is loaded")
-            # if count == 200:
-            #     self.overlay.hide()
             dpg.render_dearpygui_frame()
 
     def apply_theme(self) -> None:
