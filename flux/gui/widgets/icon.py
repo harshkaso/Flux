@@ -17,4 +17,4 @@ class IconWidget:
 
     def update(self, new_icon: IconID) -> None:
         self._asset = self._provider.icon(new_icon)
-        dpg.configure_item(self._image, texture=self._asset.texture)
+        dpg.configure_item(self._image, texture_tag=self._asset.texture)
