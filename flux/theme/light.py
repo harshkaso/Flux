@@ -1,4 +1,4 @@
-from flux.core.models import ThemeSpec, ColorPalette
+from flux.theme.models import ThemeSpec, ColorPalette
 
 LIGHT_THEME = ThemeSpec(
     colors=ColorPalette(

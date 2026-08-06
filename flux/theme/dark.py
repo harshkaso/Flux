@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from flux.core.models import ThemeSpec, ColorPalette
+from flux.theme.models import ThemeSpec, ColorPalette
 
 DARK_THEME = ThemeSpec(
     colors=ColorPalette(
