@@ -44,9 +44,9 @@ class ThemeManager:
             cls._compiled[component] = builder(cls._current)
 
     @classmethod
-    def item_theme(cls, theme: Theme):
+    def item_theme(cls, componentTheme: ComponentTheme) -> ItemTag:
         cls._ensure_initialized()
-        return cls._themes[theme]
+        return cls._compiled[componentTheme]
 
     @classmethod
     def subscribe(cls, subscriber: ThemeSubscriber) -> None:

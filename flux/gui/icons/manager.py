@@ -9,25 +9,36 @@ logger = get_logger(__file__)
 
 
 class IconManager:
-    PARENT_DIRECTORY = Path(__file__).parent
+    _PARENT_DIRECTORY: Path = Path(__file__).parent
+    _icon_assets: dict[IconID, IconAsset] = {}
+    _texture_registry: ItemTag
 
-    def __init__(self) -> None:
-        self._icons: dict[IconID, IconAsset] = {}
-        self._texture_registry: ItemTag = dpg.add_texture_registry()
+    @classmethod
+    def _icon_path(cls, id: IconID) -> str:
+        return str(cls._PARENT_DIRECTORY / "pngs" / f"{id}.png")
 
-    def load(self, icon: IconID) -> None:
-        if icon in self._icons.keys():
-            return
+    @classmethod
+    def _ensure_initialized(cls) -> None:
+        if not cls._icon_assets:
+            cls._texture_registry = dpg.add_texture_registry()
+            cls._load_all_icon_assets()
 
-        path = self.PARENT_DIRECTORY / "pngs" / f"{icon}.png"
-        width, height, channels, data = dpg.load_image(str(path))
+    @classmethod
+    def _load_all_icon_assets(cls) -> None:
+        for id in IconID:
+            cls._load_icon_assets(id)
+
+    @classmethod
+    def _load_icon_assets(cls, id: IconID) -> None:
+        path = cls._icon_path(id)
+        width, height, channels, data = dpg.load_image(path)
         texture_tag: ItemTag = dpg.add_static_texture(
             width=width,
             height=height,
             default_value=data,
-            parent=self._texture_registry,
+            parent=cls._texture_registry,
         )
-        self._icons[icon] = IconAsset(
+        cls._icon_assets[id] = IconAsset(
             width=width,
             height=height,
             channels=channels,
@@ -35,12 +46,7 @@ class IconManager:
             texture=texture_tag,
         )
 
-    def load_all(self) -> None:
-        for icon in IconID:
-            self.load(icon)
-
-    def icon(self, icon: IconID) -> IconAsset:
-        if icon not in self._icons.keys():
-            logger.warning("icon not loaded yet")
-            # return
-        return self._icons[icon]
+    @classmethod
+    def asset(cls, id: IconID) -> IconAsset:
+        cls._ensure_initialized()
+        return cls._icon_assets[id]
