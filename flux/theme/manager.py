@@ -1,52 +1,61 @@
+from typing import Callable
+
 from flux.core.types import ItemTag
-from flux.core.protocols import Themeable
+from flux.core.protocols import ThemeSubscriber
 from flux.core.enums import Theme, ComponentTheme
-from flux.core.models import ThemeSpec, ColorPalette
+from flux.theme.models import ThemeSpec, ColorPalette
+from flux.theme.builders.button import build_button_theme
+from flux.theme.builders.sidebar import build_sidebar_theme
+from flux.theme.builders.application import build_application_theme
+from flux.theme.builders.app_window import build_app_window_theme
 
 from flux.theme.dark import DARK_THEME
 from flux.theme.light import LIGHT_THEME
 
-from flux.theme.builders.application import build_application_theme
-from flux.theme.builders.app_window import build_app_window_theme
-
 
 class ThemeManager:
-    def __init__(self) -> None:
-        self._themes: dict[Theme, ThemeSpec] = {
-            Theme.LIGHT: LIGHT_THEME,
-            Theme.DARK: DARK_THEME,
-        }
-        self._subscribers: list[Themeable] = []
-        self._compiled: dict[ComponentTheme, ItemTag] = {}
-        self._current: ThemeSpec = DARK_THEME
-
-        self._build_themes()
+    _themes: dict[Theme, ThemeSpec] = {
+        Theme.LIGHT: LIGHT_THEME,
+        Theme.DARK: DARK_THEME,
+    }
+    _current: ThemeSpec = DARK_THEME
+    _builders: dict[ComponentTheme, Callable[[ThemeSpec], ItemTag]] = {
+        ComponentTheme.APPLICATION: build_application_theme,
+        ComponentTheme.APP_WINDOW: build_app_window_theme,
+        ComponentTheme.SIDEBAR: build_sidebar_theme,
+        ComponentTheme.BUTTON: build_button_theme,
+    }
+    _subscribers: list[ThemeSubscriber] = []
+    _compiled: dict[ComponentTheme, ItemTag] = {}
 
     @property
-    def colors(self) -> ColorPalette:
-        return self._current.colors
+    def colors(cls) -> ColorPalette:
+        return cls._current.colors
 
-    # TODO: Add proporties to access spacing and typography tokens
+    @classmethod
+    def _ensure_initialized(cls):
+        if not cls._compiled:
+            cls._build_component_themes()
 
-    def _build_themes(self) -> None:
-        self._compiled[ComponentTheme.APPLICATION] = build_application_theme(
-            self._current
-        )
-        self._compiled[ComponentTheme.APP_WINDOW] = build_app_window_theme(
-            self._current
-        )
+    @classmethod
+    def _build_component_themes(cls):
+        cls._compiled.clear()
+        for component, builder in cls._builders.items():
+            cls._compiled[component] = builder(cls._current)
 
-    def item_theme(self, componentTheme: ComponentTheme) -> ItemTag:
-        return self._compiled[componentTheme]
+    @classmethod
+    def item_theme(cls, theme: Theme):
+        cls._ensure_initialized()
+        return cls._themes[theme]
 
-    def subscribe(self, subscriber: Themeable) -> None:
-        self._subscribers.append(subscriber)
+    @classmethod
+    def subscribe(cls, subscriber: ThemeSubscriber) -> None:
+        cls._subscribers.append(subscriber)
+        subscriber.apply_theme()
 
-    def unsubscribe(self, subscriber: Themeable) -> None:
-        self._subscribers.remove(subscriber)
-
-    def set_theme(self, theme: Theme) -> None:
-        self._current = self._themes[theme]
-        self._build_themes()
-        for subscriber in self._subscribers:
+    @classmethod
+    def set_theme(cls, theme: Theme) -> None:
+        cls._current = cls._themes[theme]
+        cls._build_component_themes()
+        for subscriber in cls._subscribers:
             subscriber.apply_theme()
