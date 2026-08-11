@@ -33,15 +33,12 @@ class App:
             resizable=resizable,
         )
         dpg.setup_dearpygui()
-        self.icons = IconManager()
-        self.icons.load_all()
-        self.theme = ThemeManager()
         self.app_window = AppWindow(self)
 
     def start(self) -> None:
         dpg.show_viewport()
         try:
-            self.theme.subscribe(self)
+            ThemeManager.subscribe(self)
             self.apply_theme()
             dpg.set_primary_window(self.app_window.tag, True)
             dpg.set_exit_callback(self.close_app)
@@ -58,7 +55,7 @@ class App:
             dpg.render_dearpygui_frame()
 
     def apply_theme(self) -> None:
-        dpg.bind_theme(self.theme.item_theme(ComponentTheme.APPLICATION))
+        dpg.bind_theme(ThemeManager.item_theme(ComponentTheme.APPLICATION))
 
     def close_app(self) -> None:
         # TODO: Handle cleanup tasks on exiting.

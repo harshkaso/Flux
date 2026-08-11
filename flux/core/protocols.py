@@ -1,26 +1,22 @@
 from typing import Protocol
-from flux.core.types import Color, ItemTag
-from flux.core.models import ThemeSpec
+from flux.core.types import ItemTag
+from flux.gui.icons.models import IconAsset
+from flux.core.enums import ComponentTheme, IconID
 
 
-class HasSize(Protocol):
+class SettingsView(Protocol):
     @property
-    def width(self) -> int: ...
-    @property
-    def height(self) -> int: ...
+    def tag(self) -> ItemTag: ...
 
 
-class Widget(Protocol):
-    def build(self) -> None: ...
+class IconProvider(Protocol):
+    def icon(self, icon: IconID) -> IconAsset: ...
 
 
-class Container(Widget, Protocol):
-    def build(self, *children: Widget) -> None: ...
-
-
-class Themeable(Protocol):
+class ThemeSubscriber(Protocol):
     def apply_theme(self) -> None: ...
 
 
-class ThemeBuilder(Protocol):
-    def build(self, theme: ThemeSpec) -> ItemTag: ...
+class ThemeProvider(Protocol):
+    def item_theme(self, componentTheme: ComponentTheme) -> ItemTag: ...
+    def subscribe(self, subscriber: ThemeSubscriber) -> None: ...
