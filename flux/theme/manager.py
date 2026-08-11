@@ -1,19 +1,32 @@
+from pathlib import Path
 from typing import Callable
+import dearpygui.dearpygui as dpg  # type: ignore
 
 from flux.core.types import ItemTag
 from flux.core.protocols import ThemeSubscriber
 from flux.core.enums import Theme, ComponentTheme
 from flux.theme.models import ThemeSpec, ColorPalette
+
 from flux.theme.builders.button import build_button_theme
 from flux.theme.builders.sidebar import build_sidebar_theme
-from flux.theme.builders.application import build_application_theme
+from flux.theme.builders.inspector import build_inspector_theme
+from flux.theme.builders.settings_rail import build_settings_rail_theme
 from flux.theme.builders.app_window import build_app_window_theme
+from flux.theme.builders.application import build_application_theme
+from flux.theme.builders.settings_button import (
+    build_settings_button_normal_theme,
+    build_settings_button_active_theme,
+)
 
 from flux.theme.dark import DARK_THEME
 from flux.theme.light import LIGHT_THEME
 
 
 class ThemeManager:
+    _FONT_FILE: str = "IBMPlexMono-Regular.ttf"
+    _FONT_SIZE: int = 15
+    _font: ItemTag | None = None
+
     _themes: dict[Theme, ThemeSpec] = {
         Theme.LIGHT: LIGHT_THEME,
         Theme.DARK: DARK_THEME,
@@ -23,7 +36,11 @@ class ThemeManager:
         ComponentTheme.APPLICATION: build_application_theme,
         ComponentTheme.APP_WINDOW: build_app_window_theme,
         ComponentTheme.SIDEBAR: build_sidebar_theme,
+        ComponentTheme.INSPECTOR: build_inspector_theme,
+        ComponentTheme.SETTINGS_RAIL: build_settings_rail_theme,
         ComponentTheme.BUTTON: build_button_theme,
+        ComponentTheme.TOOL_BUTTON_NORMAL: build_settings_button_normal_theme,
+        ComponentTheme.TOOL_BUTTON_ACTIVE: build_settings_button_active_theme,
     }
     _subscribers: list[ThemeSubscriber] = []
     _compiled: dict[ComponentTheme, ItemTag] = {}
@@ -35,6 +52,7 @@ class ThemeManager:
     @classmethod
     def _ensure_initialized(cls):
         if not cls._compiled:
+            cls._bind_font()
             cls._build_component_themes()
 
     @classmethod
@@ -59,3 +77,11 @@ class ThemeManager:
         cls._build_component_themes()
         for subscriber in cls._subscribers:
             subscriber.apply_theme()
+
+    @classmethod
+    def _bind_font(cls) -> None:
+        if cls._font is None:
+            path = Path(__file__).parent / "fonts" / cls._FONT_FILE
+            with dpg.font_registry():
+                cls._font = dpg.add_font(str(path), cls._FONT_SIZE)
+        dpg.bind_font(font=cls._font)
