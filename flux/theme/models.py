@@ -19,28 +19,12 @@ class ColorPalette:
 
 
 @dataclass(frozen=True)
-class Spacing:
-    xs: int
-    sm: int
-    md: int
-    lg: int
-    xl: int
-
-    sidebar_padding: int
-    section_gap: int
-
-
-@dataclass(frozen=True)
-class Typography:
-    font_family: str
-
-    body_size: int
-    heading_size: int
-    monospace_size: int
+class FontSpec:
+    filename: str
+    size: int
 
 
 @dataclass(frozen=True)
 class ThemeSpec:
     colors: ColorPalette
-    spacing: Spacing | None = None
-    typography: Typography | None = None
+    font: FontSpec

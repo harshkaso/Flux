@@ -23,8 +23,6 @@ from flux.theme.light import LIGHT_THEME
 
 
 class ThemeManager:
-    _FONT_FILE: str = "IBMPlexMono-Regular.ttf"
-    _FONT_SIZE: int = 15
     _font: ItemTag | None = None
 
     _themes: dict[Theme, ThemeSpec] = {
@@ -81,7 +79,7 @@ class ThemeManager:
     @classmethod
     def _bind_font(cls) -> None:
         if cls._font is None:
-            path = Path(__file__).parent / "fonts" / cls._FONT_FILE
+            path = Path(__file__).parent / "fonts" / cls._current.font.filename
             with dpg.font_registry():
-                cls._font = dpg.add_font(str(path), cls._FONT_SIZE)
+                cls._font = dpg.add_font(str(path), cls._current.font.size)
         dpg.bind_font(font=cls._font)

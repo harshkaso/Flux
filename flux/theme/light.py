@@ -1,4 +1,4 @@
-from flux.theme.models import ThemeSpec, ColorPalette
+from flux.theme.models import FontSpec, ThemeSpec, ColorPalette
 
 LIGHT_THEME = ThemeSpec(
     colors=ColorPalette(
@@ -10,5 +10,6 @@ LIGHT_THEME = ThemeSpec(
         primary_text=(33, 33, 33, 255),
         secondary_text=(102, 102, 102, 255),
         accent=(232, 100, 58, 255),
-    )
+    ),
+    font=FontSpec(filename="IBMPlexMono-Regular.ttf", size=15),
 )

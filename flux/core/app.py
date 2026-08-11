@@ -3,8 +3,6 @@ from flux.core.state import State
 from flux.core.types import ItemTag
 from flux.core.enums import ComponentTheme
 from flux.gui.app_window import AppWindow
-from flux.gui.overlay import OverlayManager
-from flux.gui.icons.manager import IconManager
 from flux.theme.manager import ThemeManager
 from flux.utils.logger import setup_logger, get_logger, shutdown_loggers
 
@@ -33,7 +31,7 @@ class App:
             resizable=resizable,
         )
         dpg.setup_dearpygui()
-        self.app_window = AppWindow(self)
+        self.app_window = AppWindow()
 
     def start(self) -> None:
         dpg.show_viewport()
