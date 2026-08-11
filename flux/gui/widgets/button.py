@@ -2,9 +2,7 @@ from typing import Any, Callable
 
 import dearpygui.dearpygui as dpg  # type: ignore
 from flux.core.enums import ComponentTheme, IconID
-from flux.core.schedular import Scheduler
 from flux.core.types import ItemTag
-from flux.gui.icons.models import IconAsset
 from flux.gui.widgets.icon import IconWidget
 from flux.theme.manager import ThemeManager
 from flux.utils.logger import get_logger
