@@ -1,6 +1,5 @@
 import dearpygui.dearpygui as dpg  # type: ignore
 from flux.core.state import State
-from flux.core.types import ItemTag
 from flux.core.enums import ComponentTheme
 from flux.gui.app_window import AppWindow
 from flux.theme.manager import ThemeManager
@@ -35,6 +34,10 @@ class App:
 
     def start(self) -> None:
         dpg.show_viewport()
+        dpg.show_font_manager()
+        dpg.show_item_registry()
+        # dpg.show_style_editor()
+        # dpg.show_metrics()
         try:
             ThemeManager.subscribe(self)
             self.apply_theme()
@@ -53,6 +56,7 @@ class App:
             dpg.render_dearpygui_frame()
 
     def apply_theme(self) -> None:
+        dpg.bind_font(ThemeManager.regular_font())
         dpg.bind_theme(ThemeManager.item_theme(ComponentTheme.APPLICATION))
 
     def close_app(self) -> None:

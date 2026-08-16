@@ -1,7 +1,7 @@
 from typing import Callable
 
 import dearpygui.dearpygui as dpg  # type: ignore
-from flux.core.enums import ComponentTheme, IconID
+from flux.core.enums import ComponentTheme, Icon
 from flux.core.types import ItemTag
 from flux.core.enums import SettingsPage
 from flux.gui.widgets.settings_button import SettingsButton
@@ -18,28 +18,31 @@ class SettingsRail:
         with dpg.child_window(tag=self._tag, width=56):
             self._buttons: dict[SettingsPage, SettingsButton] = {
                 SettingsPage.FLOWFIELD: SettingsButton(
-                    icon=IconID.WAVES_HORIZONTAL,
-                    callback=lambda: self._select(SettingsPage.FLOWFIELD),
+                    icon=Icon.WIND,
+                    callback=lambda: self.select(SettingsPage.FLOWFIELD),
                 ),
                 SettingsPage.PARTICLE: SettingsButton(
-                    icon=IconID.SPARKLES,
-                    callback=lambda: self._select(SettingsPage.PARTICLE),
+                    icon=Icon.BUBBLES,
+                    callback=lambda: self.select(SettingsPage.PARTICLE),
                 ),
                 SettingsPage.MASK: SettingsButton(
-                    icon=IconID.SCAN,
-                    callback=lambda: self._select(SettingsPage.MASK),
+                    icon=Icon.SQUARE_INTERSECT,
+                    callback=lambda: self.select(SettingsPage.MASK),
                 ),
                 SettingsPage.COLOR: SettingsButton(
-                    icon=IconID.PALETTE,
-                    callback=lambda: self._select(SettingsPage.COLOR),
+                    icon=Icon.PAINTBRUSH_VERTICAL,
+                    callback=lambda: self.select(SettingsPage.COLOR),
                 ),
                 SettingsPage.SAVE: SettingsButton(
-                    icon=IconID.SAVE,
-                    callback=lambda: self._select(SettingsPage.SAVE),
+                    icon=Icon.SAVE,
+                    callback=lambda: self.select(SettingsPage.SAVE),
+                ),
+                SettingsPage.GENERAL: SettingsButton(
+                    icon=Icon.COG,
+                    callback=lambda: self.select(SettingsPage.GENERAL),
                 ),
             }
         ThemeManager.subscribe(self)
-        self.set_active_button(self._buttons[SettingsPage.FLOWFIELD])
 
     def set_active_button(self, tool_button: SettingsButton) -> None:
         if self._active_settings_button:
@@ -47,7 +50,7 @@ class SettingsRail:
         tool_button.set_active(True)
         self._active_settings_button = tool_button
 
-    def _select(self, page: SettingsPage) -> None:
+    def select(self, page: SettingsPage) -> None:
         self.set_active_button(self._buttons[page])
         self._on_settings_button_selected(page)
 

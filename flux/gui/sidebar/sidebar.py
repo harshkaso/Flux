@@ -5,7 +5,6 @@ from flux.gui.sidebar.inspector import Inspector
 from flux.gui.sidebar.settings_rail import SettingsRail
 from flux.theme.manager import ThemeManager
 from flux.utils.logger import get_logger
-from flux.gui.widgets.button import ButtonWidget
 
 logger = get_logger(__name__)
 
@@ -26,10 +25,11 @@ class Sidebar:
                     on_settings_button_selected=self._handle_on_settings_button_selected
                 )
                 self.inspector = Inspector()
+                self.settings_rail.select(SettingsPage.FLOWFIELD)
         ThemeManager.subscribe(self)
 
     def _handle_on_settings_button_selected(self, page: SettingsPage):
-        self.inspector.show(page=page)
+        self.inspector.set_page(page=page)
 
     def apply_theme(self) -> None:
         dpg.bind_item_theme(

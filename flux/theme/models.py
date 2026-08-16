@@ -27,4 +27,5 @@ class FontSpec:
 @dataclass(frozen=True)
 class ThemeSpec:
     colors: ColorPalette
-    font: FontSpec
+    regular_font: FontSpec
+    icon_font: FontSpec

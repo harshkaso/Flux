@@ -11,5 +11,6 @@ LIGHT_THEME = ThemeSpec(
         secondary_text=(102, 102, 102, 255),
         accent=(232, 100, 58, 255),
     ),
-    font=FontSpec(filename="IBMPlexMono-Regular.ttf", size=15),
+    regular_font=FontSpec(filename="IBMPlexMono-Regular.ttf", size=15),
+    icon_font=FontSpec(filename="flux-icons.ttf", size=24),
 )

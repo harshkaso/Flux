@@ -29,11 +29,12 @@ class ComponentTheme(StrEnum):
     SIDEBAR = auto()
     SETTINGS_RAIL = auto()
     INSPECTOR = auto()
-    CANVAS = auto()
-    LOADING = auto()
     BUTTON = auto()
-    TOOL_BUTTON_NORMAL = auto()
-    TOOL_BUTTON_ACTIVE = auto()
+    SETTINGS_BUTTON_NORMAL = auto()
+    SETTINGS_BUTTON_ACTIVE = auto()
+    COLLAPSIBLE_PANEL = auto()
+    COLLAPSIBLE_PANEL_HEADER = auto()
+    COLLAPSIBLE_PANEL_BODY = auto()
 
 
 class SettingsPage(StrEnum):
@@ -42,23 +43,15 @@ class SettingsPage(StrEnum):
     MASK = auto()
     COLOR = auto()
     SAVE = auto()
+    GENERAL = auto()
 
 
-class IconID(StrEnum):
-    @staticmethod
-    def _generate_next_value_(
-        name: str,
-        start: int,
-        count: int,
-        last_values: list[str],
-    ) -> str:
-        return name.lower().replace("_", "-")
-
-    CHEVRON_RIGHT = auto()
-    CHEVRON_DOWN = auto()
-    WAVES_HORIZONTAL = auto()
-    SPARKLES = auto()
-    PALETTE = auto()
-    DOWNLOAD = auto()
-    SCAN = auto()
-    SAVE = auto()
+class Icon(StrEnum):
+    BUBBLES = "\U000f0000"
+    CHEVRON_DOWN = "\U000f0001"
+    CHEVRON_RIGHT = "\U000f0002"
+    COG = "\U000f0003"
+    PAINTBRUSH_VERTICAL = "\U000f0004"
+    SAVE = "\U000f0005"
+    SQUARE_INTERSECT = "\U000f0006"
+    WIND = "\U000f0007"

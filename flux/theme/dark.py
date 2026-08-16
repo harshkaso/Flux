@@ -11,5 +11,6 @@ DARK_THEME = ThemeSpec(
         secondary_text=(150, 150, 150, 255),
         accent=(232, 100, 58, 255),
     ),
-    font=FontSpec(filename="IBMPlexMono-Regular.ttf", size=15),
+    regular_font=FontSpec(filename="IBMPlexMono-Regular.ttf", size=15),
+    icon_font=FontSpec(filename="lucide-icons.ttf", size=24),
 )

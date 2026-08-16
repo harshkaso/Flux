@@ -1,34 +1,18 @@
 import dearpygui.dearpygui as dpg  # type: ignore
-from typing import Callable
-from flux.core.enums import ComponentTheme, IconID
+from typing import Callable, Optional
+from flux.core.enums import ComponentTheme, Icon
 from flux.core.types import ItemTag
-from flux.gui.widgets.icon import IconWidget
 from flux.theme.manager import ThemeManager
 
 
 class SettingsButton:
-    def __init__(
-        self, icon: IconID, callback: Callable[[], None] | None = None
-    ) -> None:
+    def __init__(self, icon: Icon, callback: Optional[Callable] = None) -> None:
         self._tag: ItemTag = dpg.generate_uuid()
-        self._clickable_tag: ItemTag = dpg.generate_uuid()
-        self._handler_registry: ItemTag = dpg.generate_uuid()
         self._active: bool = False
-        self._callback = callback
+        self._callback: Optional[Callable] = callback
 
-        # with dpg.child_window(tag=self._tag, width=40, height=40):
-        with dpg.child_window(tag=self._tag, auto_resize_y=True, auto_resize_x=True):
-            with dpg.group(tag=self._clickable_tag):
-                self._icon = IconWidget(icon=icon)
-
-        with dpg.item_handler_registry(tag=self._handler_registry):
-            dpg.add_item_clicked_handler(
-                callback=self._handle_click,
-            )
-
-        dpg.bind_item_handler_registry(
-            self._clickable_tag,
-            self._handler_registry,
+        dpg.add_button(
+            tag=self._tag, label=icon, width=40, height=40, callback=self._handle_click
         )
 
         ThemeManager.subscribe(self)
@@ -46,10 +30,11 @@ class SettingsButton:
         self.apply_theme()
 
     def apply_theme(self) -> None:
+        dpg.bind_item_font(self._tag, font=ThemeManager.icon_font())
         component = (
-            ComponentTheme.TOOL_BUTTON_ACTIVE
+            ComponentTheme.SETTINGS_BUTTON_ACTIVE
             if self._active
-            else ComponentTheme.TOOL_BUTTON_NORMAL
+            else ComponentTheme.SETTINGS_BUTTON_NORMAL
         )
 
         dpg.bind_item_theme(self._tag, theme=ThemeManager.item_theme(component))
