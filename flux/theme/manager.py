@@ -7,7 +7,6 @@ from flux.core.protocols import ThemeSubscriber
 from flux.core.enums import Theme, ComponentTheme
 from flux.theme.models import ThemeSpec
 
-from flux.theme.builders.button import build_button_theme
 from flux.theme.builders.sidebar import build_sidebar_theme
 from flux.theme.builders.inspector import build_inspector_theme
 from flux.theme.builders.settings_rail import build_settings_rail_theme
@@ -39,10 +38,8 @@ class ThemeManager:
         ComponentTheme.SIDEBAR: build_sidebar_theme,
         ComponentTheme.INSPECTOR: build_inspector_theme,
         ComponentTheme.SETTINGS_RAIL: build_settings_rail_theme,
-        ComponentTheme.BUTTON: build_button_theme,
         ComponentTheme.SETTINGS_BUTTON_NORMAL: build_settings_button_normal_theme,
         ComponentTheme.SETTINGS_BUTTON_ACTIVE: build_settings_button_active_theme,
-        ComponentTheme.COLLAPSIBLE_PANEL: build_collapsible_panel_theme,
         ComponentTheme.COLLAPSIBLE_PANEL: build_collapsible_panel_theme,
         ComponentTheme.COLLAPSIBLE_PANEL_HEADER: build_collapsible_panel_header_theme,
         ComponentTheme.COLLAPSIBLE_PANEL_BODY: build_collapsible_panel_body_theme,
