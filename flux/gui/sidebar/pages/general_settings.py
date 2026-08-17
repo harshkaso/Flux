@@ -11,8 +11,16 @@ class GeneralSettings:
         with dpg.group(tag=self._tag, show=False):
             with CollapsiblePanel(label="Theme Settings"):
                 dpg.add_text(default_value="Themes")
-                dpg.add_combo(items=[Theme.DARK, Theme.LIGHT], width=-1)
+                dpg.add_combo(
+                    default_value=Theme.DARK,
+                    items=[Theme.DARK, Theme.LIGHT],
+                    width=-1,
+                    callback=self._theme_selected,
+                )
 
     @property
     def tag(self) -> ItemTag:
         return self._tag
+
+    def _theme_selected(self, sender, app_data) -> None:
+        ThemeManager.set_theme(app_data)

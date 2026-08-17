@@ -1,5 +1,5 @@
 # All hail the G.O.A.T Vladimir Ein for figuring out the way to get rid of deadzones on the header button of this widget
-from typing import Optional
+from typing import Callable, Optional
 
 import dearpygui.dearpygui as dpg  # type: ignore
 from flux.core.enums import ComponentTheme, Icon
@@ -12,10 +12,12 @@ class CollapsiblePanel:
     def __init__(
         self,
         label: str,
-        default_open: Optional[bool] = True,
+        on_toggle: Optional[Callable] = None,
+        default_open: bool = True,
     ) -> None:
-        self._label = label
-        self._open = default_open
+        self._label: str = label
+        self._open: bool = default_open
+        self._on_toggle: Optional[Callable] = on_toggle
 
         self._tag: ItemTag = dpg.generate_uuid()
         self._header: ItemTag = dpg.generate_uuid()
@@ -37,6 +39,7 @@ class CollapsiblePanel:
                     tag=self._header_icon,
                     indent=ICON_PADDING_LEFT,
                     height=40,
+                    span_columns=True,
                     callback=self._toggle,
                 )
                 dpg.add_button(
@@ -44,13 +47,17 @@ class CollapsiblePanel:
                     height=40,
                     tag=self._header_label,
                 )
-            dpg.add_child_window(tag=self._body, auto_resize_y=True)
+            dpg.add_child_window(tag=self._body, auto_resize_y=True, show=self._open)
 
         ThemeManager.subscribe(self)
 
     @property
     def body(self) -> ItemTag:
         return self._body
+
+    @property
+    def is_open(self) -> bool:
+        return self._open
 
     def __enter__(self) -> CollapsiblePanel:
         dpg.push_container_stack(self._body)
@@ -79,12 +86,32 @@ class CollapsiblePanel:
         )
 
     def _toggle(self) -> None:
-        self._open = not self._open
+        self._set_open(not self._open)
+
+        if self._on_toggle:
+            self._on_toggle(self)
+
+    def _set_open(self, value: bool) -> None:
+        self._open = value
+
         dpg.set_item_label(
             self._header_icon,
-            label=Icon.CHEVRON_DOWN if self._open else Icon.CHEVRON_RIGHT,
+            label=(Icon.CHEVRON_DOWN if self._open else Icon.CHEVRON_RIGHT),
         )
+
         dpg.configure_item(
             self._body,
             show=self._open,
         )
+
+    def open(self) -> None:
+        if self._open:
+            return
+
+        self._set_open(True)
+
+    def close(self) -> None:
+        if not self._open:
+            return
+
+        self._set_open(False)
