@@ -24,9 +24,13 @@ from flux.theme.builders.settings_button import (
 
 from flux.theme.dark import DARK_THEME
 from flux.theme.light import LIGHT_THEME
+from flux.utils.logger import get_logger
+
+logger = get_logger(__file__)
 
 
 class ThemeManager:
+    _FONTS_DIR: Path = Path(__file__).parent / "fonts"
     _themes: dict[Theme, ThemeSpec] = {
         Theme.LIGHT: LIGHT_THEME,
         Theme.DARK: DARK_THEME,
@@ -47,27 +51,72 @@ class ThemeManager:
     _subscribers: list[ThemeSubscriber] = []
     _compiled: dict[ComponentTheme, ItemTag] = {}
     _initialized: bool = False
+    _fonts: dict[tuple[str, int], ItemTag] = {}
+    _font_registry: ItemTag
     _regular_font: ItemTag
     _icon_font: ItemTag
 
     @classmethod
     def _build_component_themes(cls):
-        cls._compiled.clear()
+        if cls._compiled:
+            logger.warning("component themes already built.")
+            return
         for component, builder in cls._builders.items():
             cls._compiled[component] = builder(cls._current)
 
     @classmethod
+    def _add_regular_font(cls, filename: str, size: int, registry: ItemTag) -> None:
+        cls._regular_font = dpg.add_font(
+            str(cls._FONTS_DIR / filename),
+            size,
+            parent=registry,
+        )
+        cls._fonts[(filename, size)] = cls._regular_font
+
+    @classmethod
+    def _add_icon_font(cls, filename: str, size: int, registry: ItemTag) -> None:
+        cls._icon_font = dpg.add_font(
+            str(cls._FONTS_DIR / filename),
+            size,
+            parent=registry,
+        )
+        cls._fonts[(filename, size)] = cls._icon_font
+
+    @classmethod
+    def _get_or_add_font(
+        cls,
+        filename: str,
+        size: int,
+    ) -> ItemTag:
+        key = (filename, size)
+
+        if key not in cls._fonts:
+            cls._fonts[key] = dpg.add_font(
+                str(cls._FONTS_DIR / filename),
+                size,
+                parent=cls._font_registry,
+            )
+
+        return cls._fonts[key]
+
+    @classmethod
     def _register_fonts(cls) -> None:
-        path = Path(__file__).parent / "fonts"
-        with dpg.font_registry():
-            cls._regular_font = dpg.add_font(
-                file=str(path / cls._current.regular_font.filename),
-                size=cls._current.regular_font.size,
-            )
-            cls._icon_font = dpg.add_font(
-                file=str(path / cls._current.icon_font.filename),
-                size=cls._current.icon_font.size,
-            )
+        cls._font_registry = dpg.add_font_registry()
+        cls._regular_font = cls._get_or_add_font(
+            cls._current.regular_font.filename,
+            cls._current.regular_font.size,
+        )
+        cls._icon_font = cls._get_or_add_font(
+            cls._current.icon_font.filename,
+            cls._current.icon_font.size,
+        )
+
+    @classmethod
+    def _delete_compiled(cls):
+        if cls._compiled:
+            for compiled_theme in cls._compiled.values():
+                dpg.delete_item(compiled_theme)
+            cls._compiled.clear()
 
     @classmethod
     def _ensure_initialized(cls):
@@ -99,6 +148,16 @@ class ThemeManager:
     @classmethod
     def set_theme(cls, theme: Theme) -> None:
         cls._current = cls._themes[theme]
+        cls._regular_font = cls._get_or_add_font(
+            cls._current.regular_font.filename,
+            cls._current.regular_font.size,
+        )
+        cls._icon_font = cls._get_or_add_font(
+            cls._current.icon_font.filename,
+            cls._current.icon_font.size,
+        )
+        # Delete existing compiled themes before building new ones
+        cls._delete_compiled()
         cls._build_component_themes()
         for subscriber in cls._subscribers:
             subscriber.apply_theme()
